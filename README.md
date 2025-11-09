@@ -19,6 +19,7 @@ This Project is inspired by classic pokemon game
     # On mac/linux
     source venv/bin/activate
     # On windows
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
     ./venv/Scripts/activate.bat
     ```
 2. (Required) Install the required libraries
