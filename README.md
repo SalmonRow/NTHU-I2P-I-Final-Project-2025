@@ -30,6 +30,13 @@ This Project is inspired by classic pokemon game
     ```bash
     python main.py
     ```
+
+## Run the program as a module
+    Must have main file inside it
+    e.g. to run src/interface/components/button.py :
+    ```bash
+    python -m src.interface.components.button
+    ```
     
 ## Setup Server for Online Play
 
