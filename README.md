@@ -13,11 +13,14 @@ This Project is inspired by classic pokemon game
     python3 -m venv venv
     # On Windows 
     python -m venv venv
+    # or
+    py -3.12 -m venv venv
     
     # On mac/linux
     source venv/bin/activate
     # On windows
-    ./venv/Scripts/activate
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+    ./venv/Scripts/activate.bat
     ```
 2. (Required) Install the required libraries
     ```bash
@@ -26,6 +29,13 @@ This Project is inspired by classic pokemon game
 3. Run the game:
     ```bash
     python main.py
+    ```
+
+## Run the program as a module
+    Must have main file inside it
+    e.g. to run src/interface/components/button.py :
+    ```bash
+    python -m src.interface.components.button
     ```
     
 ## Setup Server for Online Play

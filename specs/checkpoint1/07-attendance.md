@@ -1,5 +1,5 @@
 # Attendance
 
-Score: 2 points
+Score: 1 points
 
 - [ ] Come to the class and demo
