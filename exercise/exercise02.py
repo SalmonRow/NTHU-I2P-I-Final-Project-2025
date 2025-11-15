@@ -19,10 +19,10 @@ while True:
     
     pygame.time.wait(10)
     screen.fill((0, 255, 0))
-    '''TODO: Flip Display'''
+    pygame.display.flip()
     
     pygame.time.wait(10)
     screen.fill((255, 0, 0))
-    '''TODO: Flip Display'''
+    pygame.display.flip()
          
          

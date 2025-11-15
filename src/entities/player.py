@@ -13,41 +13,64 @@ class Player(Entity):
 
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
         super().__init__(x, y, game_manager)
+        self.cooldown = 0.0
 
     @override
     def update(self, dt: float) -> None:
         dis = Position(0, 0)
+        movement_speed = 6
         '''
         [TODO HACKATHON 2]
         Calculate the distance change, and then normalize the distance
-        
-        [TODO HACKATHON 4]
-        Check if there is collision, if so try to make the movement smooth
-        Hint #1 : use entity.py _snap_to_grid function or create a similar function
-        Hint #2 : Beware of glitchy teleportation, you must do
-                    1. Update X
-                    2. If collide, snap to grid
-                    3. Update Y
-                    4. If collide, snap to grid
-                  instead of update both x, y, then snap to grid
-        
-        if input_manager.key_down(pg.K_LEFT) or input_manager.key_down(pg.K_a):
-            dis.x -= ...
-        if input_manager.key_down(pg.K_RIGHT) or input_manager.key_down(pg.K_d):
-            dis.x += ...
-        if input_manager.key_down(pg.K_UP) or input_manager.key_down(pg.K_w):
-            dis.y -= ...
-        if input_manager.key_down(pg.K_DOWN) or input_manager.key_down(pg.K_s):
-            dis.y += ...
-        
-        self.position = ...
         '''
+
+        if input_manager.key_down(pg.K_w) or input_manager.key_down(pg.K_UP):
+            dis.y -= movement_speed
+        if input_manager.key_down(pg.K_s) or input_manager.key_down(pg.K_DOWN):
+            dis.y += movement_speed
+        if input_manager.key_down(pg.K_a) or input_manager.key_down(pg.K_LEFT):
+            dis.x -= movement_speed
+        if input_manager.key_down(pg.K_d) or input_manager.key_down(pg.K_RIGHT):
+            dis.x += movement_speed
         
+
+        movement_vector = pg.math.Vector2(dis.x, dis.y)
+        if movement_vector.length_squared() > 0:
+            movement_vector = movement_vector.normalize()
+
+        to_move = self.speed * dt
+
+        self.position.x += movement_vector.x * to_move
+
+        player_rect = pg.Rect(self.position.x, #player's rectangle here 
+                              self.position.y,
+                              GameSettings.TILE_SIZE,
+                              GameSettings.TILE_SIZE)
+        
+        if self.game_manager.current_map.check_collision(player_rect):
+            self.position.x -= movement_vector.x * to_move
+            self.position.x = self._snap_to_grid(self.position.x)
+
+        self.position.y += movement_vector.y * to_move
+
+        player_rect.x = self.position.x
+        player_rect.y = self.position.y
+
+        if self.game_manager.current_map.check_collision(player_rect):
+            self.position.y -= movement_vector.y * to_move
+            self.position.y = self._snap_to_grid(self.position.y) #make it so that it snaps to the grid perfectly
+
         # Check teleportation
-        tp = self.game_manager.current_map.check_teleport(self.position)
-        if tp:
-            dest = tp.destination
-            self.game_manager.switch_map(dest)
+        if self.cooldown > 0:
+            self.cooldown -= dt
+        else:
+
+            tp = self.game_manager.current_map.check_teleport(self.position)
+
+            if tp:
+                dest = tp.destination
+                self.game_manager.switch_map(dest)
+                self.cooldown += 0.5
                 
         super().update(dt)
 

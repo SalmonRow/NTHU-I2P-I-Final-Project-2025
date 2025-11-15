@@ -13,7 +13,7 @@ screen = pygame.display.set_mode((640, 480))
 pygame.display.set_caption("Moving Character")
 
 player = pygame.image.load('assets/images/menu_sprites/menusprite1.png')
-player_position = (0, 0)
+player_position = (0, 0) #(x,y)
 player_speed = 25
 
 while True:
@@ -22,13 +22,14 @@ while True:
             pygame.quit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                pass
+                player_position[0] -= player_speed
             elif event.key == pygame.K_RIGHT:
-                pass
+                player_position[0] += player_speed
             elif event.key == pygame.K_UP:
-                pass
+                player_position[1] -= player_speed
             elif event.key == pygame.K_DOWN:
-                pass
+                player_position[1] += player_speed
+
     screen.fill((255, 255, 255))
     screen.blit(player, player_position)
     pygame.display.flip()

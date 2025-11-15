@@ -43,7 +43,17 @@ class Entity:
         [TODO HACKATHON 3]
         Implement the correct algorithm of player camera
         '''
-        return PositionCamera(int(self.position.x), int(self.position.y))
+        half_width = GameSettings.SCREEN_WIDTH / 2
+        half_height = GameSettings.SCREEN_HEIGHT / 2
+        half_tile = GameSettings.TILE_SIZE / 2
+
+        center_x = self.position.x + half_tile
+        center_y = self.position.y + half_tile
+
+        camera_x = center_x - half_width
+        camera_y = center_y - half_height
+
+        return PositionCamera(int(camera_x), int(camera_y))
         
     def to_dict(self) -> dict[str, object]:
         return {

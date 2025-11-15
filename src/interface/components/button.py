@@ -27,9 +27,13 @@ class Button(UIComponent):
         Initialize the properties
         
         self.img_button_hover = ...
-        self.img_button = ...       --> This is a reference for which image to render
+        self.img_button = ...       --> This is a reference for which image to render, oh, it's written here burh
         self.on_click = ...
         '''
+        self.img_button_hover = Sprite(img_hovered_path, (width, height))
+        self.img_button = Sprite(img_path, (width, height)) #the current image like hover or not hovered of clikcced maybe
+        self.on_click = on_click
+
 
     @override
     def update(self, dt: float) -> None:
@@ -46,7 +50,18 @@ class Button(UIComponent):
         else:
             ...
         '''
-        pass
+        mouse = self.hitbox.collidepoint(input_manager.mouse_pos) #???
+        if mouse == True:
+            self.img_button = self.img_button_hover
+
+            if input_manager.mouse_pressed(1):
+                if self.on_click != None: 
+                    self.on_click()
+            
+        else: #if it's not hovered
+            self.img_button = self.img_button_default
+            # if self.img_button == self.img_button_hover:
+            #     self.img_button = self.img_button
     
     @override
     def draw(self, screen: pg.Surface) -> None:
@@ -54,7 +69,7 @@ class Button(UIComponent):
         [TODO HACKATHON 1]
         You might want to change this too
         '''
-        _ = screen.blit(self.img_button_default.image, self.hitbox)
+        _ = screen.blit(self.img_button.image, self.hitbox)
 
 
 def main():

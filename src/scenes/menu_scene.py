@@ -12,7 +12,8 @@ class MenuScene(Scene):
     background: BackgroundSprite
     # Buttons
     play_button: Button
-    
+    settings_button : Button
+
     def __init__(self):
         super().__init__()
         self.background = BackgroundSprite("backgrounds/background1.png")
@@ -24,6 +25,13 @@ class MenuScene(Scene):
             lambda: scene_manager.change_scene("game")
         )
         
+        self.settings_button = Button(
+            "UI/button_setting.png", "UI/button_setting_hover.png",
+            px - 100, py, 100, 100,
+            lambda: scene_manager.change_scene("setting")
+        )
+
+        
     @override
     def enter(self) -> None:
         sound_manager.play_bgm("RBY 101 Opening (Part 1).ogg")
@@ -31,6 +39,8 @@ class MenuScene(Scene):
 
     @override
     def exit(self) -> None:
+        sound_manager.stop_all_sounds() #stop musics for now, idk bruh
+
         pass
 
     @override
@@ -39,8 +49,9 @@ class MenuScene(Scene):
             scene_manager.change_scene("game")
             return
         self.play_button.update(dt)
-
+        self.settings_button.update(dt)
     @override
     def draw(self, screen: pg.Surface) -> None:
         self.background.draw(screen)
         self.play_button.draw(screen)
+        self.settings_button.draw(screen)
