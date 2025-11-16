@@ -25,10 +25,6 @@ class Button(UIComponent):
         '''
         [TODO HACKATHON 1]
         Initialize the properties
-        
-        self.img_button_hover = ...
-        self.img_button = ...       --> This is a reference for which image to render, oh, it's written here burh
-        self.on_click = ...
         '''
         self.img_button_hover = Sprite(img_hovered_path, (width, height))
         self.img_button = Sprite(img_path, (width, height)) #the current image like hover or not hovered of clikcced maybe
@@ -42,13 +38,6 @@ class Button(UIComponent):
         Check if the mouse cursor is colliding with the button, 
         1. If collide, draw the hover image
         2. If collide & clicked, call the on_click function
-        
-        if self.hitbox.collidepoint(input_manager.mouse_pos):
-            ...
-            if input_manager.mouse_pressed(1) and self.on_click is not None:
-                ...
-        else:
-            ...
         '''
         mouse = self.hitbox.collidepoint(input_manager.mouse_pos) #???
         if mouse == True:
@@ -60,8 +49,7 @@ class Button(UIComponent):
             
         else: #if it's not hovered
             self.img_button = self.img_button_default
-            # if self.img_button == self.img_button_hover:
-            #     self.img_button = self.img_button
+
     
     @override
     def draw(self, screen: pg.Surface) -> None:

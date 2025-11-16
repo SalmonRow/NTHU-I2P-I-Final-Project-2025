@@ -8,11 +8,23 @@ from src.utils import Logger, PositionCamera, GameSettings, Position
 from src.core.services import sound_manager
 from src.sprites import Sprite
 from typing import override
+from src.interface.components import Button
+from src.interface.components import Popup
 
 class GameScene(Scene):
     game_manager: GameManager
     online_manager: OnlineManager | None
     sprite_online: Sprite
+
+    #adding the to button that toggles overlay (setting and backpack)
+    current_overlay: str | None
+    setting_button: Button
+    bag_button: Button
+    back_button : Button
+
+    #pop up UIs when button is pressed
+    setting_popup: Popup
+    bag_popup: Popup
     
     def __init__(self):
         super().__init__()
@@ -29,6 +41,56 @@ class GameScene(Scene):
         else:
             self.online_manager = None
         self.sprite_online = Sprite("ingame_ui/options1.png", (GameSettings.TILE_SIZE, GameSettings.TILE_SIZE))
+
+        self.current_overlay = None
+
+        #the pop up thingy
+        screen_size = (GameSettings.SCREEN_WIDTH, GameSettings.SCREEN_HEIGHT)
+        close_callback = lambda: self.toggle_overlay(self.current_overlay)
+
+        setting_popup_path = "assets/images/UI/raw/UI_Flat_Frame03a.png"
+        bag_popup_path = "assets/images/UI/raw/UI_Flat_Frame02a.png"
+
+        self.setting_popup = Popup(setting_popup_path, screen_size, close_callback)
+        self.bag_popup = Popup(bag_popup_path, screen_size, close_callback)
+
+        #creating buttons
+        self.setting_button = Button(
+            "UI/button_setting.png",
+            "UI/button_setting_hover.png",
+            GameSettings.SCREEN_WIDTH - 70, 10, 
+            60,
+            60,
+            lambda : self.toggle_overlay("setting")
+        )
+
+        self.bag_button = Button(
+            "UI/button_backpack.png",
+            "UI/button_backpack_hover.png",
+            GameSettings.SCREEN_WIDTH - 140, 10,
+            60,
+            60,
+            lambda : self.toggle_overlay("bag")
+        )
+
+        # self.back_button = Button(
+        #     "UI/button_back.png",
+        #     "UI/button_back_hover.png",
+        #     GameSettings.SCREEN_WIDTH // 2 - 50,  
+        #     GameSettings.SCREEN_HEIGHT // 2 + 200,  
+        #     100,  
+        #     100,  
+        #     lambda : self.toggle_overlay(self.current_overlay)
+        # )
+
+
+    def toggle_overlay(self, overlay_name) -> None:
+        if overlay_name is None:
+            self.current_overlay = None
+        elif self.current_overlay == overlay_name:
+            self.current_overlay = None
+        else:
+            self.current_overlay = overlay_name
         
         
     @override
@@ -62,6 +124,20 @@ class GameScene(Scene):
                 self.game_manager.player.position.y,
                 self.game_manager.current_map.path_name
             )
+
+        # Update overlay buttons
+        self.setting_button.update(dt) 
+        self.bag_button.update(dt) 
+
+        if self.current_overlay == "setting":
+            self.setting_popup.update(dt)
+            # self.back_button.update(dt)
+        
+        if self.current_overlay == "bag":
+            self.bag_popup.update(dt)
+            # self.back_button.update(dt)
+
+
         
     @override
     def draw(self, screen: pg.Surface):        
@@ -94,3 +170,24 @@ class GameScene(Scene):
                     pos = cam.transform_position_as_position(Position(player["x"], player["y"]))
                     self.sprite_online.update_pos(pos)
                     self.sprite_online.draw(screen)
+
+
+        #the overlay part
+        if self.current_overlay is not None:
+
+            darken = pg.Surface(
+                (GameSettings.SCREEN_WIDTH, GameSettings.SCREEN_HEIGHT)
+            )
+            darken.set_alpha(128)
+            darken.fill((0,0,0))
+            screen.blit(darken, (0, 0))  
+
+            if self.current_overlay == "setting":
+                self.setting_popup.draw(screen)
+            if self.current_overlay == "bag":
+                self.bag_popup.draw(screen)
+
+            # self.back_button.draw(screen)
+
+        self.setting_button.draw(screen)
+        self.bag_button.draw(screen)
