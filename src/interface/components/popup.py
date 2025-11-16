@@ -35,13 +35,12 @@ class Popup(UIComponent):
         self.interactive_components = []
         self.internal_buttons = []
 
-        # Example: Add an internal CLOSE button (optional, since GameScene has a dedicated back_button)
         internal_close_button = Button(
             "UI/button_back.png", 
             "UI/button_back_hover.png",
             self.frame_rect.right - 80, self.frame_rect.top + 20, 
             60, 60, 
-            on_click=close_callback # This uses the function passed from GameScene
+            on_click=close_callback
         )
         self.internal_buttons.append(internal_close_button)
         self.interactive_components.append(internal_close_button)
@@ -50,13 +49,11 @@ class Popup(UIComponent):
 
     @override
     def update(self, dt: float) -> None:
-        """Updates all interactive elements inside the popup."""
         for component in self.interactive_components:
             component.update(dt)
 
     @override
     def draw(self, screen: pg.Surface) -> None:
-        """Draws the frame and all internal components."""
         screen.blit(self.frame_img, self.frame_rect)
 
         for component in self.interactive_components:
