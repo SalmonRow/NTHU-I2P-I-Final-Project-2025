@@ -22,10 +22,7 @@ class Button(UIComponent):
     ):
         self.img_button_default = Sprite(img_path, (width, height))
         self.hitbox = pg.Rect(x, y, width, height)
-        '''
-        [TODO HACKATHON 1]
-        Initialize the properties
-        '''
+
         self.img_button_hover = Sprite(img_hovered_path, (width, height))
         self.img_button = Sprite(img_path, (width, height)) #the current image like hover or not hovered of clikcced maybe
         self.on_click = on_click
@@ -33,14 +30,9 @@ class Button(UIComponent):
 
     @override
     def update(self, dt: float) -> None:
-        '''
-        [TODO HACKATHON 1]
-        Check if the mouse cursor is colliding with the button, 
-        1. If collide, draw the hover image
-        2. If collide & clicked, call the on_click function
-        '''
+
         mouse = self.hitbox.collidepoint(input_manager.mouse_pos) #???
-        if mouse == True:
+        if mouse:
             self.img_button = self.img_button_hover
 
             if input_manager.mouse_pressed(1):
@@ -53,10 +45,7 @@ class Button(UIComponent):
     
     @override
     def draw(self, screen: pg.Surface) -> None:
-        '''
-        [TODO HACKATHON 1]
-        You might want to change this too
-        '''
+
         _ = screen.blit(self.img_button.image, self.hitbox)
 
 

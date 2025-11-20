@@ -8,24 +8,28 @@ from src.utils import Logger, PositionCamera, GameSettings, Position
 from src.core.services import sound_manager
 from src.sprites import Sprite
 from typing import override
-from src.interface.components import Button
-from src.interface.components import Popup
+from src.interface.components import Button, Popup, Checkbox, Slider
 
 class GameScene(Scene):
     game_manager: GameManager
     online_manager: OnlineManager | None
     sprite_online: Sprite
 
-    #adding the to button that toggles overlay (setting and backpack)
-    current_overlay: str | None
-    setting_button: Button
-    bag_button: Button
-    back_button : Button
-
-    #pop up UIs when button is pressed
+    #UI components
+    #popups
     setting_popup: Popup
     bag_popup: Popup
     
+    #buttons
+    current_overlay: str | None
+    setting_button: Button
+    bag_button: Button
+    #sliders
+    volume_slider: Slider
+    #checkboxes
+    hitbox_checkbox: Checkbox
+    
+
     def __init__(self):
         super().__init__()
         # Game Manager
@@ -73,17 +77,53 @@ class GameScene(Scene):
             lambda : self.toggle_overlay("bag")
         )
 
-        # self.back_button = Button(
-        #     "UI/button_back.png",
-        #     "UI/button_back_hover.png",
-        #     GameSettings.SCREEN_WIDTH // 2 - 50,  
-        #     GameSettings.SCREEN_HEIGHT // 2 + 200,  
-        #     100,  
-        #     100,  
-        #     lambda : self.toggle_overlay(self.current_overlay)
-        # )
+        #for scaling stuff in setting
+        setting_frame_x = self.setting_popup.frame_rect.x
+        setting_frame_y = self.setting_popup.frame_rect.y
+        setting_frame_width = self.setting_popup.frame_rect.width
+        
+        #---sliders---
+        slider_width = 300
+        slider_height = 40
+        slider_x = setting_frame_x + (setting_frame_width // 2) - (slider_width // 2)
+        slider_y = setting_frame_y + 150
+
+        self.volume_slider = Slider(
+            x=slider_x, y=slider_y,
+            width=slider_width, height=slider_height,
+            min_val=0.0, max_val=100.0,
+            initial_val=sound_manager.get_volume() * 100,
+            val_change=lambda v: sound_manager.set_volume(v/100),
+            bar_path="assets/images/UI/raw/UI_Flat_Bar05a.png",
+            handle_path="assets/images/UI/raw/UI_Flat_Button01a_1.png",
+            label= "Master Volume"
+        )
+        self.setting_popup.interactive_components.append(self.volume_slider)
+
+        #---checkboxes---
+        cb_size = 30
+        cb_x = setting_frame_x + 50
+        cb_y = slider_y + slider_height + 50
+
+        self.hitbox_checkbox = Checkbox(
+            x=cb_x, y=cb_y,
+            size=cb_size,
+            initial_checked=GameSettings.DRAW_HITBOXES,
+            on_toggle=lambda checked: (
+                setattr(GameSettings, "DRAW_HITBOXES", checked),
+                Logger.info(f"Hitboxes has been set to :{checked}")
+            ),
+            label="Toggle Hitbox",
+            checked_path="assets/images/UI/raw/UI_Flat_ToggleOn03a.png",
+            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff03a.png",
+        )
+
+        self.setting_popup.interactive_components.append(self.hitbox_checkbox)
 
 
+
+
+    #overlay
     def toggle_overlay(self, overlay_name) -> None:
         if overlay_name is None:
             self.current_overlay = None
@@ -142,14 +182,6 @@ class GameScene(Scene):
     @override
     def draw(self, screen: pg.Surface):        
         if self.game_manager.player:
-            '''
-            [TODO HACKATHON 3]
-            Implement the camera algorithm logic here
-            Right now it's hard coded, you need to follow the player's positions
-            you may use the below example, but the function still incorrect, you may trace the entity.py
-            
-            camera = self.game_manager.player.camera
-            '''
             camera = self.game_manager.player.camera
             
             self.game_manager.current_map.draw(screen, camera)

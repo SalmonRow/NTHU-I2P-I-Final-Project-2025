@@ -2,45 +2,59 @@ from __future__ import annotations
 import pygame as pg
 from .entity import Entity
 from src.core.services import input_manager
-from src.utils import Position, PositionCamera, GameSettings, Logger
-from src.core import GameManager
+from src.utils import Position, PositionCamera, GameSettings, Logger, Direction
+# from src.core import GameManager
 import math
 from typing import override
 
 class Player(Entity):
     speed: float = 4.0 * GameSettings.TILE_SIZE
     game_manager: GameManager
-
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
         super().__init__(x, y, game_manager)
         self.cooldown = 0.0
 
+    def _set_direction(self, direction: Direction):
+        if self.direction == direction:
+            return
+        self.direction = direction
+        if self.direction == Direction.RIGHT:
+            self.animation.switch("right")
+        elif self.direction == Direction.LEFT:
+            self.animation.switch("left")
+        elif self.direction == Direction.UP:
+            self.animation.switch("up")
+        elif self.direction == Direction.DOWN:
+            self.animation.switch("down")
+
+
     @override
     def update(self, dt: float) -> None:
         dis = Position(0, 0)
-        movement_speed = 6
-        '''
-        [TODO HACKATHON 2]
-        Calculate the distance change, and then normalize the distance
-        '''
+        movement_speed = 1
 
         if input_manager.key_down(pg.K_w) or input_manager.key_down(pg.K_UP):
             dis.y -= movement_speed
+            self._set_direction(Direction.UP)
         if input_manager.key_down(pg.K_s) or input_manager.key_down(pg.K_DOWN):
             dis.y += movement_speed
+            self._set_direction(Direction.DOWN)
         if input_manager.key_down(pg.K_a) or input_manager.key_down(pg.K_LEFT):
             dis.x -= movement_speed
+            self._set_direction(Direction.LEFT)
         if input_manager.key_down(pg.K_d) or input_manager.key_down(pg.K_RIGHT):
             dis.x += movement_speed
+            self._set_direction(Direction.RIGHT)
         
 
         movement_vector = pg.math.Vector2(dis.x, dis.y)
         if movement_vector.length_squared() > 0:
             movement_vector = movement_vector.normalize()
 
-        to_move = self.speed * dt
+        to_move = self.speed * dt * 1.5
+    
 
-        self.position.x += movement_vector.x * to_move
+        self.position.x += movement_vector.x * to_move 
 
         player_rect = pg.Rect(self.position.x, #player's rectangle here 
                               self.position.y,

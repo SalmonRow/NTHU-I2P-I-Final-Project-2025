@@ -32,6 +32,7 @@ class Popup(UIComponent):
             center=(size[0] // 2, size[1] // 2)
         )
 
+        #every popup window will have these components built in
         self.interactive_components = []
         self.internal_buttons = []
 

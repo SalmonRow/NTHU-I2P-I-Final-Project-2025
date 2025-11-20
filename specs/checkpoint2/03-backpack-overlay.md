@@ -9,4 +9,4 @@ No points will be given if your prequisite is not full score!
 
 - [ ] (0.25 point) Create a new Overlay for Backpack inside the Game Scene
 - [ ] (0.5 point) Make sure it can be synchronized with the data from save and load
-- [ ] (0.25 point) Inside the Overlay, show list of monsters and items you own
+- [ ] (0.25 point) aInside the Overly, show list of monsters and items you own

@@ -24,13 +24,11 @@ class Engine:
 
         pg.display.set_caption(GameSettings.TITLE)
 
+        #register
         scene_manager.register_scene("menu", MenuScene())
         scene_manager.register_scene("game", GameScene())
-        '''
-        [TODO HACKATHON 5]
-        Register the setting scene here
-        '''
         scene_manager.register_scene('setting', SettingScene())
+        #change
         scene_manager.change_scene("menu")
 
     def run(self):
