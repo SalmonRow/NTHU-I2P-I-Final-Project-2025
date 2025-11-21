@@ -93,6 +93,7 @@ class GameManager:
         
     def save(self, path: str) -> None:
         try:
+            os.mkdirs(os.path.diranme(path), exist_ok=True)
             with open(path, "w") as f:
                 json.dump(self.to_dict(), f, indent=2)
             Logger.info(f"Game saved to {path}")
@@ -114,11 +115,11 @@ class GameManager:
         for key, m in self.maps.items():
             block = m.to_dict()
             block["enemy_trainers"] = [t.to_dict() for t in self.enemy_trainers.get(key, [])]
-            spawn = self.player_spawns.get(key)
-            block["player"] = {
-                "x": spawn["x"] / GameSettings.TILE_SIZE,
-                "y": spawn["y"] / GameSettings.TILE_SIZE
-            }
+            # spawn = self.player_spawns.get(key)
+            # block["player"] = {
+            #     "x": spawn["x"] / GameSettings.TILE_SIZE,
+            #     "y": spawn["y"] / GameSettings.TILE_SIZE
+            # }
             map_blocks.append(block)
         return {
             "map": map_blocks,
@@ -137,18 +138,18 @@ class GameManager:
         Logger.info("Loading maps")
         maps_data = data["map"]
         maps: dict[str, Map] = {}
-        player_spawns: dict[str, Position] = {}
+        # player_spawns: dict[str, Position] = {}
         trainers: dict[str, list[EnemyTrainer]] = {}
 
         for entry in maps_data:
             path = entry["path"]
             maps[path] = Map.from_dict(entry)
             sp = entry.get("player")
-            if sp:
-                player_spawns[path] = Position(
-                    sp["x"] * GameSettings.TILE_SIZE,
-                    sp["y"] * GameSettings.TILE_SIZE
-                )
+            # if sp:
+            #     player_spawns[path] = Position(
+            #         sp["x"] * GameSettings.TILE_SIZE,
+            #         sp["y"] * GameSettings.TILE_SIZE
+            #     )
         current_map = data["current_map"]
         gm = cls(
             maps, current_map,
@@ -158,6 +159,7 @@ class GameManager:
         )
         gm.current_map_key = current_map
         
+        raw_visited_pos = data.get("last_visited_position", {})
         Logger.info("Loading enemy trainers")
         for m in data["map"]:
             raw_data = m["enemy_trainers"]

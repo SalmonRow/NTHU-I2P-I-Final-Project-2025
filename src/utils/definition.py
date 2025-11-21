@@ -81,3 +81,4 @@ class Item(TypedDict):
     name: str
     count: int
     sprite_path: str
+

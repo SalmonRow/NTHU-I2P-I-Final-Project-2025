@@ -28,5 +28,6 @@ class Bag:
     def from_dict(cls, data: dict[str, object]) -> "Bag":
         monsters = data.get("monsters") or []
         items = data.get("items") or []
+
         bag = cls(monsters, items)
         return bag

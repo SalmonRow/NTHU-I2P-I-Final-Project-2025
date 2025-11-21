@@ -8,7 +8,7 @@ from src.utils import Logger, PositionCamera, GameSettings, Position
 from src.core.services import sound_manager
 from src.sprites import Sprite
 from typing import override
-from src.interface.components import Button, Popup, Checkbox, Slider
+from src.interface.components import Button, Popup, Checkbox, Slider, MonsterListComponent, ItemListComponent
 
 class GameScene(Scene):
     game_manager: GameManager
@@ -24,10 +24,16 @@ class GameScene(Scene):
     current_overlay: str | None
     setting_button: Button
     bag_button: Button
+    save_button: Button
+    load_button: Button
     #sliders
     volume_slider: Slider
     #checkboxes
     hitbox_checkbox: Checkbox
+
+    #stuff in the bags
+    monster_list: MonsterListComponent
+    item_list: ItemListComponent
     
 
     def __init__(self):
@@ -77,6 +83,30 @@ class GameScene(Scene):
             lambda : self.toggle_overlay("bag")
         )
 
+        JASON = "saves/game0.json"
+        self.save_button = Button(
+            "UI/button_save.png",
+            "UI/button_save_hover.png",
+            self.setting_popup.frame_rect.left + 30,
+            self.setting_popup.frame_rect.top + 30,
+            80,
+            80,
+            on_click=lambda: self.game_manager.save(JASON)
+        )
+
+        self.setting_popup.interactive_components.append(self.save_button)
+
+        self.load_button = Button(
+            "UI/button_load.png",
+            "UI/button_load_hover.png",
+            self.setting_popup.frame_rect.left + 120,
+            self.setting_popup.frame_rect.top + 30,
+            80,
+            80,
+            on_click=lambda: self.load_game_action(JASON)
+        )
+
+        self.setting_popup.interactive_components.append(self.load_button)
         #for scaling stuff in setting
         setting_frame_x = self.setting_popup.frame_rect.x
         setting_frame_y = self.setting_popup.frame_rect.y
@@ -95,7 +125,7 @@ class GameScene(Scene):
             initial_val=sound_manager.get_volume() * 100,
             val_change=lambda v: sound_manager.set_volume(v/100),
             bar_path="assets/images/UI/raw/UI_Flat_Bar05a.png",
-            handle_path="assets/images/UI/raw/UI_Flat_Button01a_1.png",
+            handle_path="assets/images/UI/raw/UI_Flat_Button01a_3.png",
             label= "Master Volume"
         )
         self.setting_popup.interactive_components.append(self.volume_slider)
@@ -120,8 +150,41 @@ class GameScene(Scene):
 
         self.setting_popup.interactive_components.append(self.hitbox_checkbox)
 
+        #----BAG----
+        bag_frame_x = self.bag_popup.frame_rect.x
+        bag_frame_y = self.bag_popup.frame_rect.y
+        bag_frame_width = self.bag_popup.frame_rect.width
+        bag_frame_height = self.bag_popup.frame_rect.height
 
+        list_width = (bag_frame_width // 2) - 40
+        list_height = bag_frame_height - 100
 
+        self.monster_list = MonsterListComponent(
+            x=bag_frame_x + 20, y=bag_frame_y + 80,
+            width=list_width,height=list_height,
+            monster_list=self.game_manager.bag._monsters_data
+        )
+        self.bag_popup.interactive_components.append(self.monster_list)
+
+        self.item_list = ItemListComponent(
+            x=bag_frame_x + list_width + 30, y=bag_frame_y + 80,
+            width=list_width,height=list_height,
+            item_list=self.game_manager.bag._items_data
+        )
+        self.bag_popup.interactive_components.append(self.item_list)
+
+    #load
+    def load_game_action(self, path: str):
+        Logger.info(f"Attempting to load game from :{path}...")
+        new_manager = GameManager.load(path)
+        if new_manager is not None:
+            self.exit()
+            self.game_manager = new_manager
+            self.enter()
+            self.current_overlay = None
+            Logger.info(f"Game Loaded successfully")
+        else:
+            Logger.info(f"Unsuccessful. File not found or corrupt")
 
     #overlay
     def toggle_overlay(self, overlay_name) -> None:
@@ -131,7 +194,6 @@ class GameScene(Scene):
             self.current_overlay = None
         else:
             self.current_overlay = overlay_name
-        
         
     @override
     def enter(self) -> None:
@@ -171,13 +233,9 @@ class GameScene(Scene):
 
         if self.current_overlay == "setting":
             self.setting_popup.update(dt)
-            # self.back_button.update(dt)
         
         if self.current_overlay == "bag":
             self.bag_popup.update(dt)
-            # self.back_button.update(dt)
-
-
         
     @override
     def draw(self, screen: pg.Surface):        
@@ -203,7 +261,6 @@ class GameScene(Scene):
                     self.sprite_online.update_pos(pos)
                     self.sprite_online.draw(screen)
 
-
         #the overlay part
         if self.current_overlay is not None:
 
@@ -218,8 +275,6 @@ class GameScene(Scene):
                 self.setting_popup.draw(screen)
             if self.current_overlay == "bag":
                 self.bag_popup.draw(screen)
-
-            # self.back_button.draw(screen)
 
         self.setting_button.draw(screen)
         self.bag_button.draw(screen)

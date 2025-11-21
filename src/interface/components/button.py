@@ -24,14 +24,14 @@ class Button(UIComponent):
         self.hitbox = pg.Rect(x, y, width, height)
 
         self.img_button_hover = Sprite(img_hovered_path, (width, height))
-        self.img_button = Sprite(img_path, (width, height)) #the current image like hover or not hovered of clikcced maybe
+        self.img_button = Sprite(img_path, (width, height)) 
         self.on_click = on_click
 
 
     @override
     def update(self, dt: float) -> None:
 
-        mouse = self.hitbox.collidepoint(input_manager.mouse_pos) #???
+        mouse = self.hitbox.collidepoint(input_manager.mouse_pos) 
         if mouse:
             self.img_button = self.img_button_hover
 

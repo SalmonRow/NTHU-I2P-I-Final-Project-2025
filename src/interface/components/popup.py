@@ -37,8 +37,8 @@ class Popup(UIComponent):
         self.internal_buttons = []
 
         internal_close_button = Button(
-            "UI/button_back.png", 
-            "UI/button_back_hover.png",
+            "UI/button_x.png", 
+            "UI/button_x_hover.png",
             self.frame_rect.right - 80, self.frame_rect.top + 20, 
             60, 60, 
             on_click=close_callback
@@ -46,7 +46,6 @@ class Popup(UIComponent):
         self.internal_buttons.append(internal_close_button)
         self.interactive_components.append(internal_close_button)
 
-        # NOTE: For a real Bag or Settings menu, you would add more buttons/sliders here.
 
     @override
     def update(self, dt: float) -> None:
