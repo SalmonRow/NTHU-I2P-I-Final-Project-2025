@@ -5,6 +5,7 @@ from src.sprites import Sprite
 from src.core.services import input_manager
 from typing import Callable, override
 from .component import UIComponent
+from src.interface.components.label import Label
 
 class Checkbox(UIComponent):
 
@@ -59,10 +60,13 @@ class Checkbox(UIComponent):
         current_img = self.checked_img if self.is_checked else self.unchecked_img
         screen.blit(current_img, self.rect)
 
-        label_f = self.fonts.render(self.label, True, (255,255,255))
         label_x = self.rect.right + 10
-        lable_y = self.rect.centery - label_f.get_height() // 2
-        screen.blit(label_f, (label_x, lable_y))
+        lable_y = self.rect.centery
+        label_f = Label(
+            self.label,
+            x=label_x, y=lable_y
+        )
+        label_f.draw(screen)
 
 
 

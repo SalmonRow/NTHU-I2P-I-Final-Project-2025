@@ -9,7 +9,7 @@ from typing import override
 
 class Player(Entity):
     speed: float = 4.0 * GameSettings.TILE_SIZE
-    game_manager: GameManager
+    game_manager: GameManagerx
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
         super().__init__(x, y, game_manager)
         self.cooldown = 0.0

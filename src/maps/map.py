@@ -13,12 +13,16 @@ class Map:
     # Rendering Properties
     _surface: pg.Surface
     _collision_map: list[pg.Rect]
+    _bushmap: list[pg.Rect]
 
-    def __init__(self, path: str, tp: list[Teleport], spawn: Position):
+    _raw_data: dict
+
+    def __init__(self, path: str, tp: list[Teleport], spawn: Position, raw_data: dict | None = None):
         self.path_name = path
         self.tmxdata = load_tmx(path)
         self.spawn = spawn
         self.teleporters = tp
+        self._raw_data = raw_data or {}  # ← Store it
 
         pixel_w = self.tmxdata.width * GameSettings.TILE_SIZE
         pixel_h = self.tmxdata.height * GameSettings.TILE_SIZE
@@ -28,6 +32,7 @@ class Map:
         self._render_all_layers(self._surface)
         # Prebake the collision map
         self._collision_map = self._create_collision_map()
+        self._bushmap = self._create_bushmap()
 
     def update(self, dt: float):
         return
@@ -39,6 +44,10 @@ class Map:
         if GameSettings.DRAW_HITBOXES:
             for rect in self._collision_map:
                 pg.draw.rect(screen, (255, 0, 0), camera.transform_rect(rect), 1)
+
+            for rect in self._bushmap:
+                pg.draw.rect(screen, (255, 0, 0), camera.transform_rect(rect), 1)
+
         
     def check_collision(self, rect: pg.Rect) -> bool:
         '''
@@ -106,19 +115,47 @@ class Map:
                             GameSettings.TILE_SIZE, GameSettings.TILE_SIZE
                         ))
         return rects
+    
+    def _create_bushmap(self) -> list[pg.Rect]:
+        rects = []
+        for layer in self.tmxdata.visible_layers:
+            if isinstance(layer, pytmx.TiledTileLayer) and ("PokemonBush" in layer.name.lower() or "house" in layer.name.lower()):
+                for x, y, gid in layer:
+                    if gid != 0:
+                        '''
+                        [TODO HACKATHON 4]
+                        rects.append(pg.Rect(...))
+                        Append the collision rectangle to the rects[] array
+                        Remember scale the rectangle with the TILE_SIZE from settings
+                        '''
+                        rects.append(pg.Rect(
+                            x * GameSettings.TILE_SIZE,
+                            y * GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE, GameSettings.TILE_SIZE
+                        ))
+        return rects
 
     @classmethod
     def from_dict(cls, data: dict) -> "Map":
         tp = [Teleport.from_dict(t) for t in data["teleport"]]
         pos = Position(data["player"]["x"] * GameSettings.TILE_SIZE, data["player"]["y"] * GameSettings.TILE_SIZE)
-        return cls(data["path"], tp, pos)
+        return cls(data["path"], tp, pos, data)
 
     def to_dict(self):
-        return {
+        result = {
             "path": self.path_name,
             "teleport": [t.to_dict() for t in self.teleporters],
             "player": {
                 "x": self.spawn.x // GameSettings.TILE_SIZE,
                 "y": self.spawn.y // GameSettings.TILE_SIZE,
-            }
+            },
+
         }
+        if "bush" in self._raw_data:
+            result["bush"] = self._raw_data["bush"]
+        if "wild_mon" in self._raw_data:
+            result["wild_mon"] = self._raw_data["wild_mon"]
+        if "enemy_trainers" in self._raw_data:
+            result["enemy_trainers"] = self._raw_data["enemy_trainers"]
+            
+        return result

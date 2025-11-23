@@ -24,7 +24,11 @@ class GameManager:
     should_change_scene: bool
     next_map: str
 
+    current_battle_en: "EnemyTrainer | None"
+
     last_visited_position: dict[str, Position]
+    last_battle_result: str | None = None
+    save_path: str = "saves/game0.json"
     
     def __init__(self, maps: dict[str, Map], start_map: str, 
                  player: Player | None,
@@ -44,6 +48,17 @@ class GameManager:
         # Check If you should change scene
         self.should_change_scene = False
         self.next_map = ""
+
+        self.current_battle_en = None
+
+    def get_and_clear_battle_result(self) -> str | None:
+        result = self.last_battle_result
+        self.last_battle_result = None
+        return result
+    
+    def auto_save(self) -> None:
+        """Saves the game to the designated path."""
+        self.save(self.save_path)
         
     @property
     def current_map(self) -> Map:
@@ -93,7 +108,7 @@ class GameManager:
         
     def save(self, path: str) -> None:
         try:
-            os.mkdirs(os.path.diranme(path), exist_ok=True)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w") as f:
                 json.dump(self.to_dict(), f, indent=2)
             Logger.info(f"Game saved to {path}")

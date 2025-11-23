@@ -6,6 +6,7 @@ from src.core.services import input_manager
 from src.utils import Logger
 from typing import Callable, override
 from .component import UIComponent
+from .label import Label
 
 class Button(UIComponent):
     img_button: Sprite
@@ -13,11 +14,16 @@ class Button(UIComponent):
     img_button_hover: Sprite
     hitbox: pg.Rect
     on_click: Callable[[], None] | None
+    text: str
+    button_label: Label | None
 
     def __init__(
         self,
         img_path: str, img_hovered_path:str,
         x: int, y: int, width: int, height: int,
+        text: str = '',
+        fontsize: int=24,
+        text_color: tuple[int,int,int]=(0,0,0),
         on_click: Callable[[], None] | None = None
     ):
         self.img_button_default = Sprite(img_path, (width, height))
@@ -26,7 +32,18 @@ class Button(UIComponent):
         self.img_button_hover = Sprite(img_hovered_path, (width, height))
         self.img_button = Sprite(img_path, (width, height)) 
         self.on_click = on_click
+        self.text = text
 
+        if self.text:
+            self.button_label = Label(
+                text=text, 
+                x=self.hitbox.centerx, y=self.hitbox.centery,
+                color=text_color,
+                align='center',
+                fontsize=fontsize
+            )
+        else:
+            self.button_label = None
 
     @override
     def update(self, dt: float) -> None:
@@ -34,20 +51,18 @@ class Button(UIComponent):
         mouse = self.hitbox.collidepoint(input_manager.mouse_pos) 
         if mouse:
             self.img_button = self.img_button_hover
-
             if input_manager.mouse_pressed(1):
                 if self.on_click != None: 
                     self.on_click()
-            
         else: #if it's not hovered
             self.img_button = self.img_button_default
 
-    
     @override
     def draw(self, screen: pg.Surface) -> None:
 
         _ = screen.blit(self.img_button.image, self.hitbox)
-
+        if self.button_label:
+            self.button_label.draw(screen)
 
 def main():
     import sys

@@ -3,7 +3,7 @@ import pygame as pg
 
 from src.sprites import Sprite
 from src.core.services import input_manager
-from src.utils import Logger
+from src.utils import Logger, load_img
 from typing import Callable, override
 from .component import UIComponent
 from .button import Button
@@ -23,7 +23,7 @@ class Popup(UIComponent):
     ):
         super().__init__()
 
-        self.frame_img = pg.image.load(frame_path).convert_alpha()
+        self.frame_img = load_img(frame_path)
 
         frame_width = int(size[0] * 0.6)
         frame_height = int(size[1] * 0.7)
@@ -40,12 +40,15 @@ class Popup(UIComponent):
             "UI/button_x.png", 
             "UI/button_x_hover.png",
             self.frame_rect.right - 80, self.frame_rect.top + 20, 
-            60, 60, 
+            60, 60,     
             on_click=close_callback
         )
         self.internal_buttons.append(internal_close_button)
         self.interactive_components.append(internal_close_button)
 
+    def set_position(self, x, y):
+        self.frame_rect.topleft = (x,y)
+    
 
     @override
     def update(self, dt: float) -> None:

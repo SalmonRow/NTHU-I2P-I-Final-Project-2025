@@ -6,9 +6,9 @@ from .services import scene_manager, input_manager
 from src.scenes.menu_scene import MenuScene
 from src.scenes.game_scene import GameScene
 from src.scenes.setting_scene import SettingScene
+from src.scenes.battle_scene import BattleScene
 
 class Engine:
-    #type hints here ...
     screen: pg.Surface              # Screen Display of the Game
     clock: pg.time.Clock            # Clock for FPS control
     running: bool                   # Running state of the game
@@ -23,11 +23,12 @@ class Engine:
         self.running = True
 
         pg.display.set_caption(GameSettings.TITLE)
-
+        game_scene = GameScene()
         #register
         scene_manager.register_scene("menu", MenuScene())
         scene_manager.register_scene("game", GameScene())
         scene_manager.register_scene('setting', SettingScene())
+        scene_manager.register_scene('battle', BattleScene(game_scene.game_manager))
         #change
         scene_manager.change_scene("menu")
 

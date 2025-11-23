@@ -3,7 +3,7 @@ import pygame as pg
 from src.utils import GameSettings
 from src.sprites import BackgroundSprite
 from src.scenes.scene import Scene
-from src.interface.components import Button
+from src.interface.components import Button, Checkbox
 from src.core.services import scene_manager, sound_manager, input_manager
 from typing import override
 
@@ -22,15 +22,14 @@ class MenuScene(Scene):
         self.play_button = Button(
             "UI/button_play.png", "UI/button_play_hover.png",
             px + 50, py, 100, 100,
-            lambda: scene_manager.change_scene("game")
+            on_click=lambda: scene_manager.change_scene("game")
         )
         
         self.settings_button = Button(
             "UI/button_setting.png", "UI/button_setting_hover.png",
             px - 100, py, 100, 100,
-            lambda: scene_manager.change_scene("setting")
+            on_click=lambda: scene_manager.change_scene("setting")
         )
-
         
     @override
     def enter(self) -> None:

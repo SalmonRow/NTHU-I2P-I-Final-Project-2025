@@ -36,6 +36,7 @@ class ItemListComponent:
             complete_path = f'assets/images/{path}'
             self.item_image[path] = self._load_and_scale(complete_path, (self.SPRITE_SIZE, self.SPRITE_SIZE))
         return self.item_image[path]
+        
 
     def update(self, dt):
         pass

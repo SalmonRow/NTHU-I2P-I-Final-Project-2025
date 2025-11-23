@@ -20,7 +20,7 @@ class MonsterListComponent:
     def __init__(self, x: int, y: int, width: int, height: int, monster_list: List[Monster]):
         self.rect = pg.Rect(x, y, width, height)
         self.monsters = monster_list
-        self.line_height = 60
+        self.line_height = 80
         self.monster_image = {}
         self.scroll_offset = 0
 
@@ -56,13 +56,13 @@ class MonsterListComponent:
             if y_pos > self.rect.bottom:
                 break
 
-            #a background / panels for each pokemonts
+            #a background / panels for each monsers
             screen.blit(self._panel_surface, (self.rect.left, y_pos))
 
             #the monsters
             sprite = self._get_monster_sprites(monster['sprite_path'])
             sprite_x = self.rect.left + SPRITE_OFFSET_X
-            sprite_y = y_pos + (self.line_height - sprite.get_height()) // 2
+            sprite_y = y_pos + (self.line_height - sprite.get_height()) // 2 - 20
             screen.blit(sprite, (sprite_x, sprite_y))
 
             #texts
@@ -79,7 +79,7 @@ class MonsterListComponent:
             hp_label = Label(
                 hp_text,
                 x=self.rect.left + TEXT_OFFSET_X,
-                y=y_pos + self.line_height //2 + 5,
+                y=y_pos + self.line_height //2 - 10,
                 color=TEXT_COLOR,
                 fontsize=18
             )

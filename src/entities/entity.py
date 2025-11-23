@@ -11,6 +11,7 @@ class Entity:
     direction: Direction
     position: Position
     game_manager: GameManager
+    hitbox: pg.Rect
     
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
         # Sprite is only for debug, need to change into animations
@@ -24,9 +25,16 @@ class Entity:
         self.animation.update_pos(self.position)
         self.game_manager = game_manager
 
+        self.hitbox = pg.Rect(
+            x,y,
+            GameSettings.TILE_SIZE,
+            GameSettings.TILE_SIZE
+        )
+
     def update(self, dt: float) -> None:
         self.animation.update_pos(self.position)
         self.animation.update(dt)
+        self.hitbox.topleft = (self.position.x, self.position.y)
         
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
         self.animation.draw(screen, camera)
@@ -39,10 +47,6 @@ class Entity:
     
     @property
     def camera(self) -> PositionCamera:
-        '''
-        [TODO HACKATHON 3]
-        Implement the correct algorithm of player camera
-        '''
         half_width = GameSettings.SCREEN_WIDTH / 2
         half_height = GameSettings.SCREEN_HEIGHT / 2
         half_tile = GameSettings.TILE_SIZE / 2

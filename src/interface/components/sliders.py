@@ -5,6 +5,8 @@ from src.sprites import Sprite
 from src.core.services import input_manager
 from typing import Callable, override
 from .component import UIComponent
+from src.interface.components.label import Label
+
 
 class Slider(UIComponent):
     def __init__(
@@ -93,11 +95,15 @@ class Slider(UIComponent):
 
         #labels
         label_txt = f"{self.label}: {int(self.value)}"
-        label_f = self.font.render(label_txt, True, (255,255,255))
 
         label_x = self.rect.left
         label_y = self.rect.top - (self.handle_half_width // 2) - 40
-        screen.blit(label_f, (label_x, label_y))
+        label_f = Label(
+            label_txt,
+            x=label_x, y=label_y,
+        )
+        label_f.draw(screen)
+        
 
         
 

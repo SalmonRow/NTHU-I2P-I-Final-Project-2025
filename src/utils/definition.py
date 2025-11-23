@@ -75,10 +75,13 @@ class Monster(TypedDict):
     hp: int
     max_hp: int
     level: int
+    atk: int
+    defense: int
     sprite_path: str
+    battle_sprite_path: str
+
 
 class Item(TypedDict):
     name: str
     count: int
     sprite_path: str
-

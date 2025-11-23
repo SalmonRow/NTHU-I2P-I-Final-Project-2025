@@ -3,9 +3,17 @@
     {
       "path": "map.tmx",
       "enemy_trainers": [
-        { "x": 24, "y": 29, "classification": "stationary", "facing": "DOWN", "max_tiles": 2 },
-        { "x": 54, "y": 16, "classification": "stationary", "facing": "UP", "max_tiles": 2 },
-        { "x": 31, "y": 31, "classification": "stationary", "facing": "UP", "max_tiles": 2 }
+        { "trainer": "bob", "x": 24, "y": 29, "classification": "stationary", "facing": "DOWN", "max_tiles": 2, "monster": {
+          "name" : "Gengar", "hp": 110, "max_hp": 120, "level": 30, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        }, "status": 1 },
+
+        { "trainer": "mike", "x": 54, "y": 16, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
+          "name" : "Gengar", "hp": 140, "max_hp": 140, "level": 34, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        }, "status": 1 },
+
+        { "trainer": "james", "x": 31, "y": 31, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
+          "name" : "Gengar", "hp": 110, "max_hp": 120, "level": 30, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        }, "status": 1 }
       ],
       "teleport": [
         { "x": 24, "y": 23, "destination": "gym.tmx" }
@@ -13,7 +21,24 @@
       "player": {
         "x": 16,
         "y": 30
-      }
+      },
+      "bush" : [
+        { "x": 9, "y": 30},
+        { "x": 23, "y": 26}
+      ],
+      "wild_mon" : [
+        { "name": "Pikachu",   "hp": 100,  "max_hp": 100, "level": 25, "atk": 60, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite1.png" },
+
+        { "name": "Dragonite", "hp": 180, "max_hp": 220, "level": 40, "atk": 100, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite6.png",
+        "battle_sprite_path": "sprites/sprite6.png" },
+        
+        { "name": "Blastoise", "hp": 120, "max_hp": 180, "level": 32, "atk": 80, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite3.png",
+        "battle_sprite_path": "sprites/sprite3.png" }
+      ]
     },
     {
       "path": "gym.tmx",
@@ -37,17 +62,35 @@
   },
   "bag": {
     "monsters": [
-      { "name": "Pikachu",   "hp": 85,  "max_hp": 100, "level": 25, "sprite_path": "menu_sprites/menusprite1.png" },
-      { "name": "Charizard", "hp": 150, "max_hp": 200, "level": 36, "sprite_path": "menu_sprites/menusprite2.png" },
-      { "name": "Blastoise", "hp": 120, "max_hp": 180, "level": 32, "sprite_path": "menu_sprites/menusprite3.png" },
-      { "name": "Venusaur",  "hp": 90,  "max_hp": 160, "level": 30, "sprite_path": "menu_sprites/menusprite4.png" },
-      { "name": "Gengar",    "hp": 110, "max_hp": 140, "level": 28, "sprite_path": "menu_sprites/menusprite5.png" },
-      { "name": "Dragonite", "hp": 180, "max_hp": 220, "level": 40, "sprite_path": "menu_sprites/menusprite6.png" }
+      { "name": "Pikachu",   "hp": 100,  "max_hp": 100, "level": 25, "atk": 60, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite1.png" },
+
+      { "name": "Charizard", "hp": 150, "max_hp": 200, "level": 36, "atk": 70, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite2.png",
+        "battle_sprite_path": "sprites/sprite2.png" },
+
+      { "name": "Blastoise", "hp": 120, "max_hp": 180, "level": 32, "atk": 80, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite3.png",
+        "battle_sprite_path": "sprites/sprite3.png" },
+
+      { "name": "Venusaur",  "hp": 90,  "max_hp": 160, "level": 30, "atk": 40, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite4.png",
+        "battle_sprite_path": "sprites/sprite4.png" },
+
+      { "name": "Gengar",    "hp": 110, "max_hp": 140, "level": 28, "atk": 70, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite5.png",
+        "battle_sprite_path": "sprites/sprite5.png" },
+
+      { "name": "Dragonite", "hp": 180, "max_hp": 220, "level": 40, "atk": 100, "defense": 15,
+       "sprite_path": "menu_sprites/menusprite6.png",
+        "battle_sprite_path": "sprites/sprite6.png" }
+
     ],
     "items": [
-      { "name": "Potion",      "count": 5,  "sprite_path": "ingame_ui/potion.png" },
-      { "name": "Coins",       "count": 3,  "sprite_path": "ingame_ui/coin.png" },
-      { "name": "Pokeball",    "count": 10, "sprite_path": "ingame_ui/ball.png" }
+      { "name": "Potion",      "count": 69,  "sprite_path": "ingame_ui/potion.png" },
+      { "name": "Coins",       "count": 67,  "sprite_path": "ingame_ui/coin.png" },
+      { "name": "Pokeball",    "count": 420, "sprite_path": "ingame_ui/ball.png" }
     ]
   }
 }
