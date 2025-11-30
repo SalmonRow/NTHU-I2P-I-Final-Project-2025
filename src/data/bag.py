@@ -50,11 +50,6 @@ class Bag:
         self._monsters_data.append(monster_data)
         Logger.info(f"Monster {monster_data.get('name', 'Unknown')} added to bag.")
 
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "monsters": list(self._monsters_data),
-            "items": list(self._items_data)
-        }
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> "Bag":
         monsters = data.get("monsters") or []

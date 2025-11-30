@@ -1,6 +1,4 @@
 import pygame as pg
-import threading
-import time
 
 from src.scenes.scene import Scene
 from src.core import GameManager, OnlineManager
@@ -9,6 +7,7 @@ from src.core.services import sound_manager, input_manager
 from src.sprites import Sprite
 from typing import override
 from src.interface.components import Button, Popup, Checkbox, Slider, MonsterListComponent, ItemListComponent
+from src.interface.game_ui_manager import GameSceneUIManager
 
 from src.entities.enemy_trainer import EnemyTrainer   # Existing trainer import
 from src.entities.bush import BushEncounter
@@ -17,170 +16,47 @@ class GameScene(Scene):
     game_manager: GameManager
     online_manager: OnlineManager | None
     sprite_online: Sprite
-
-    #UI components
-    #popups
-    setting_popup: Popup
-    bag_popup: Popup
-    
-    #buttons
-    current_overlay: str | None
-    setting_button: Button
-    bag_button: Button
-    save_button: Button
-    load_button: Button
-    #sliders
-    volume_slider: Slider
-    #checkboxes
-    hitbox_checkbox: Checkbox
+    ui_manager: GameSceneUIManager
 
     #stuff in the bags
-    monster_list: MonsterListComponent
-    item_list: ItemListComponent
     wild_encounters: list['BushEncounter']
     
-
     def __init__(self):
         super().__init__()
-        # Game Manager
+        
+        # Initialize managers
+        self._init_managers()
+        
+        # Initialize state
+        self._init_state()
+        
+        # Initialize UI Manager
+        self.ui_manager = GameSceneUIManager(self)
+
+
+
+
+    def _init_managers(self) -> None:
+        """Initialize game and online managers."""
+        # Load game manager
         manager = GameManager.load("saves/game0.json")
         if manager is None:
             Logger.error("Failed to load game manager")
             exit(1)
         self.game_manager = manager
         
-        # Online Manager
+        # Setup online manager
         if GameSettings.IS_ONLINE:
             self.online_manager = OnlineManager()
         else:
             self.online_manager = None
         self.sprite_online = Sprite("ingame_ui/options1.png", (GameSettings.TILE_SIZE, GameSettings.TILE_SIZE))
 
-        self.current_overlay = None
-
-        #the pop up thingy
-        screen_size = (GameSettings.SCREEN_WIDTH, GameSettings.SCREEN_HEIGHT)
-        close_callback = lambda: self.toggle_overlay(self.current_overlay)
-
-        self.setting_popup = Popup('UI/raw/UI_Flat_Frame03a.png', screen_size, close_callback)
-        self.bag_popup = Popup("UI/raw/UI_Flat_Frame02a.png", screen_size, close_callback)
-
-        #creating buttons
-        self.setting_button = Button(
-            "UI/button_setting.png",
-            "UI/button_setting_hover.png",
-            GameSettings.SCREEN_WIDTH - 70, 10, 
-            60,
-            60,
-            on_click=lambda : self.toggle_overlay("setting")
-        )
-
-        self.bag_button = Button(
-            "UI/button_backpack.png",
-            "UI/button_backpack_hover.png",
-            GameSettings.SCREEN_WIDTH - 140, 10,
-            60,
-            60,
-            on_click=lambda : self.toggle_overlay("bag")
-        )
-
-        JASON = "saves/game0.json"
-        self.save_button = Button(
-            "UI/button_save.png",
-            "UI/button_save_hover.png",
-            self.setting_popup.frame_rect.left + 30,
-            self.setting_popup.frame_rect.top + 30,
-            80,
-            80,
-            on_click=lambda: self.game_manager.save(JASON)
-        )
-        self.setting_popup.interactive_components.append(self.save_button)
-
-        self.load_button = Button(
-            "UI/button_load.png",
-            "UI/button_load_hover.png",
-            self.setting_popup.frame_rect.left + 120,
-            self.setting_popup.frame_rect.top + 30,
-            80,
-            80,
-            on_click=lambda: self.load_game_action(JASON)
-        )
-        self.setting_popup.interactive_components.append(self.load_button)
-
-        setting_frame_x = self.setting_popup.frame_rect.x
-        setting_frame_y = self.setting_popup.frame_rect.y
-        setting_frame_width = self.setting_popup.frame_rect.width
-        
-        slider_width = 300
-        slider_height = 40
-        slider_x = setting_frame_x + (setting_frame_width // 2) - (slider_width // 2)
-        slider_y = setting_frame_y + 150
-
-        self.volume_slider = Slider(
-            x=slider_x, y=slider_y,
-            width=slider_width, height=slider_height,
-            min_val=0.0, max_val=100.0,
-            initial_val=sound_manager.get_volume() * 100,
-            val_change=lambda v: sound_manager.set_volume(v/100),
-            bar_path="assets/images/UI/raw/UI_Flat_Bar05a.png",
-            handle_path="assets/images/UI/raw/UI_Flat_Button01a_3.png",
-            label= "Master Volume"
-        )
-        self.setting_popup.interactive_components.append(self.volume_slider)
-
-        cb_size = 50
-        cb_x = setting_frame_x + 140
-        cb_y = slider_y + slider_height + 50
-
-        self.hitbox_checkbox = Checkbox(
-            x=cb_x, y=cb_y,
-            size=cb_size,
-            initial_checked=GameSettings.DRAW_HITBOXES,
-            on_toggle=lambda checked: (
-                setattr(GameSettings, "DRAW_HITBOXES", checked),
-                Logger.info(f"Hitboxes has been set to :{checked}")
-            ),
-            label="Hitbox",
-            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff01a.png", 
-            checked_path='assets/images/UI/raw/UI_Flat_ToggleLeftOn01a.png',
-        )
-        self.setting_popup.interactive_components.append(self.hitbox_checkbox)
-
-        self.mute_check = Checkbox(
-            x=cb_x, y=cb_y + 75,
-            size=cb_size, 
-            initial_checked= (sound_manager.get_volume() == 0), 
-            on_toggle=self.toggle_mute, 
-            label="Mute Audio",
-            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff01a.png", 
-            checked_path='assets/images/UI/raw/UI_Flat_ToggleLeftOn01a.png',
-        )
-        self.setting_popup.interactive_components.append(self.mute_check)
-
-        bag_frame_x = self.bag_popup.frame_rect.x
-        bag_frame_y = self.bag_popup.frame_rect.y
-        bag_frame_width = self.bag_popup.frame_rect.width
-        bag_frame_height = self.bag_popup.frame_rect.height
-
-        list_width = (bag_frame_width // 2) - 40
-        list_height = bag_frame_height - 100
-
-        self.monster_list = MonsterListComponent(
-            x=bag_frame_x + 20, y=bag_frame_y + 80,
-            width=list_width,height=list_height,
-            monster_list=self.game_manager.bag._monsters_data
-        )
-        self.bag_popup.interactive_components.append(self.monster_list)
-
-        self.item_list = ItemListComponent(
-            x=bag_frame_x + list_width + 30, y=bag_frame_y + 80,
-            width=list_width,height=list_height,
-            item_list=self.game_manager.bag._items_data
-        )
-        self.bag_popup.interactive_components.append(self.item_list)
-        #entities
+    def _init_state(self) -> None:
+        """Initialize scene state variables."""
         self.wild_encounters = []
         self.closest_enemy = None
+
 
     def load_map_entities(self):
         self.wild_encounters = []
@@ -212,22 +88,6 @@ class GameScene(Scene):
         else:
             Logger.info(f"Unsuccessful. File not found or corrupt")
 
-    #overlay
-    def toggle_overlay(self, overlay_name) -> None:
-        if overlay_name is None:
-            self.current_overlay = None
-        elif self.current_overlay == overlay_name:
-            self.current_overlay = None
-        else:
-            self.current_overlay = overlay_name
-    def toggle_mute(self, is_muted: bool) -> None:
-        if is_muted:
-            self._last_volume = sound_manager.get_volume()
-            sound_manager.set_volume(0.0) 
-        else:
-            restore_volume = getattr(self, '_last_volume', 0.5)
-            sound_manager.set_volume(restore_volume) 
-            
     def _handle_battle_win(self):
         Logger.info("Player victory! State saved without auto-heal.")
         self.game_manager.auto_save()
@@ -257,9 +117,6 @@ class GameScene(Scene):
                 self._handle_battle_lose()
             elif battle_result == "run":
                 self._handle_battle_run()
-
-        if self.online_manager:
-            self.online_manager.enter()
 
         self.load_map_entities()
         if self.online_manager:
@@ -304,15 +161,8 @@ class GameScene(Scene):
                 self.game_manager.current_map.path_name
             )
 
-        # Update overlay buttons
-        self.setting_button.update(dt) 
-        self.bag_button.update(dt) 
-
-        if self.current_overlay == "setting":
-            self.setting_popup.update(dt)
-        
-        if self.current_overlay == "bag":
-            self.bag_popup.update(dt)
+        # Update UI
+        self.ui_manager.update(dt)
         
     def trigger_battle(self, enemy_trainer: 'enemy_trainers'):
         from src.core.services import scene_manager
@@ -360,20 +210,5 @@ class GameScene(Scene):
                     self.sprite_online.update_pos(pos)
                     self.sprite_online.draw(screen)
 
-        #the overlay part
-        if self.current_overlay is not None:
-
-            darken = pg.Surface(
-                (GameSettings.SCREEN_WIDTH, GameSettings.SCREEN_HEIGHT)
-            )
-            darken.set_alpha(128)
-            darken.fill((0,0,0))
-            screen.blit(darken, (0, 0))  
-
-            if self.current_overlay == "setting":
-                self.setting_popup.draw(screen)
-            if self.current_overlay == "bag":
-                self.bag_popup.draw(screen)
-
-        self.setting_button.draw(screen)
-        self.bag_button.draw(screen)
+        # Draw UI
+        self.ui_manager.draw(screen)

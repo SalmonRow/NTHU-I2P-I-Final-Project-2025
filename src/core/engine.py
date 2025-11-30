@@ -26,7 +26,7 @@ class Engine:
         game_scene = GameScene()
         #register
         scene_manager.register_scene("menu", MenuScene())
-        scene_manager.register_scene("game", GameScene())
+        scene_manager.register_scene("game", game_scene)
         scene_manager.register_scene('setting', SettingScene())
         scene_manager.register_scene('battle', BattleScene(game_scene.game_manager))
         #change

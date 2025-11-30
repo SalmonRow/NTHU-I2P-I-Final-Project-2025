@@ -119,7 +119,7 @@ class Map:
     def _create_bushmap(self) -> list[pg.Rect]:
         rects = []
         for layer in self.tmxdata.visible_layers:
-            if isinstance(layer, pytmx.TiledTileLayer) and ("PokemonBush" in layer.name.lower() or "house" in layer.name.lower()):
+            if isinstance(layer, pytmx.TiledTileLayer) and ("pokemonbush" in layer.name.lower()):
                 for x, y, gid in layer:
                     if gid != 0:
                         '''

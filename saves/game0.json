@@ -64,7 +64,7 @@
           "max_tiles": 2,
           "monster": {
             "name": "Gengar",
-            "hp": 110,
+            "hp": 0,
             "max_hp": 120,
             "level": 30,
             "defense": 30,
@@ -131,14 +131,14 @@
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 16.0,
+    "x": 9.327999999999985,
     "y": 30.0
   },
   "bag": {
     "monsters": [
       {
         "name": "Pikachu",
-        "hp": 100,
+        "hp": 0,
         "max_hp": 100,
         "level": 25,
         "atk": 60,
@@ -195,16 +195,6 @@
         "defense": 15,
         "sprite_path": "menu_sprites/menusprite6.png",
         "battle_sprite_path": "sprites/sprite6.png"
-      },
-      {
-        "name": "Blastoise",
-        "hp": 120,
-        "max_hp": 180,
-        "level": 32,
-        "atk": 80,
-        "defense": 15,
-        "sprite_path": "menu_sprites/menusprite3.png",
-        "battle_sprite_path": "sprites/sprite3.png"
       }
     ],
     "items": [
@@ -220,7 +210,7 @@
       },
       {
         "name": "Pokeball",
-        "count": 410,
+        "count": 419,
         "sprite_path": "ingame_ui/ball.png"
       }
     ]

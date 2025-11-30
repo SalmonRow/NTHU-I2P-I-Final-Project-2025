@@ -70,6 +70,12 @@ class BattleScene(Scene):
         )
         self.enem_mon_pan.interactive_components = []
 
+        self.info_pan = Popup(
+            "UI/raw/UI_Flat_FrameSlot02c.png", (400,300),
+            close_callback=None
+        )
+        self.info_pan.interactive_components = []
+
 
         #buttons & labels
         self.atk_button = Button(
@@ -319,6 +325,7 @@ class BattleScene(Scene):
 
         if self.turn_label:
             self.turn_label.draw(screen)
+            # self.info_pan.draw(screen)
 
         self.player_mon_pan.set_position(100, 250)
         self.enem_mon_pan.set_position(900, 50)
