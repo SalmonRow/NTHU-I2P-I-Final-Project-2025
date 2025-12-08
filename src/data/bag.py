@@ -50,6 +50,13 @@ class Bag:
         self._monsters_data.append(monster_data)
         Logger.info(f"Monster {monster_data.get('name', 'Unknown')} added to bag.")
 
+    def get_first_available_monster(self) -> dict | None:
+        """Returns the first monster with HP > 0, or None if all are dead."""
+        for mon in self._monsters_data:
+            if mon.get('hp', 0) > 0:
+                return mon
+        return None
+
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> "Bag":
         monsters = data.get("monsters") or []

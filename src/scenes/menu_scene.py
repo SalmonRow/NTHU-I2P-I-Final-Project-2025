@@ -3,7 +3,7 @@ import pygame as pg
 from src.utils import GameSettings
 from src.sprites import BackgroundSprite
 from src.scenes.scene import Scene
-from src.interface.components import Button, Checkbox
+from src.interface.components import Button, Checkbox, Label
 from src.core.services import scene_manager, sound_manager, input_manager
 from typing import override
 
@@ -30,6 +30,17 @@ class MenuScene(Scene):
             px - 100, py, 100, 100,
             on_click=lambda: scene_manager.change_scene("setting")
         )
+
+        self.title = Label(text=f"BROKENMON", x=GameSettings.SCREEN_WIDTH // 2, y=GameSettings.SCREEN_HEIGHT // 2 - 50,
+                           color=(16, 106, 255),align='center',fontsize=112, fontfam=2)
+        self.title_outline = Label(text=f"BROKENMON",
+                                    x=GameSettings.SCREEN_WIDTH // 2,
+                                    y=GameSettings.SCREEN_HEIGHT // 2 - 50,
+                           color=(2, 20, 49),align='center',fontsize=112, fontfam=2)
+        
+        self.title_shad = Label(text=f"BROKENMON", x=GameSettings.SCREEN_WIDTH // 2,
+                                y=GameSettings.SCREEN_HEIGHT // 2 - 40,
+                           color=(7, 52, 126), align='center',fontsize=112, fontfam=2)
         
     @override
     def enter(self) -> None:
@@ -39,7 +50,6 @@ class MenuScene(Scene):
     @override
     def exit(self) -> None:
         sound_manager.stop_all_sounds() #stop musics for now, idk bruh
-
         pass
 
     @override
@@ -49,8 +59,12 @@ class MenuScene(Scene):
             return
         self.play_button.update(dt)
         self.settings_button.update(dt)
+
     @override
     def draw(self, screen: pg.Surface) -> None:
         self.background.draw(screen)
         self.play_button.draw(screen)
         self.settings_button.draw(screen)
+        self.title_shad.draw(screen)
+        # self.title_outline.draw(screen)
+        self.title.draw(screen)

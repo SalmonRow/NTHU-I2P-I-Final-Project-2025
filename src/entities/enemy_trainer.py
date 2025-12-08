@@ -66,8 +66,15 @@ class EnemyTrainer(Entity):
         self._has_los_to_player()
         if self.detected and input_manager.key_pressed(pg.K_SPACE):
             self.game_manager.current_battle_en = self
-            player_mon = self.game_manager.bag._monsters_data[0]
+
             enemy_mon = self.monster
+            if enemy_mon.get('hp') == 0:
+                return
+
+            player_mon = self.game_manager.bag.get_first_available_monster()
+            
+            if not player_mon:
+                return
 
             scene_manager.change_scene(
                 'battle',

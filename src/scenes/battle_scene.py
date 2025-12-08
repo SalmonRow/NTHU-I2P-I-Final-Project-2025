@@ -41,10 +41,13 @@ class BattleScene(Scene):
     @override
     def enter(self, player_monster, enemy_monster, **kwargs):
         Logger.info(f'Entering Battle... Wild encounter : {kwargs.get("is_wild_encounter", False)}')
-        sound_manager.play_bgm("RBY 107 Battle! (Trainer).ogg")
 
         self.is_wild_encounter = kwargs.get('is_wild_encounter', False)
-        
+        if self.is_wild_encounter:
+            sound_manager.play_bgm("RBY 110 Battle! (Wild Pokemon).ogg")
+        else:
+            sound_manager.play_bgm("RBY 107 Battle! (Trainer).ogg")
+
         # Fallback if monsters are missing (Development safety)
         if not player_monster:
             player_monster = {"name": "Pikachu_fake", "hp": 100, "max_hp": 100, "level": 25, "atk": 60, "defense": 15}

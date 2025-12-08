@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame as pg
 
 from src.sprites import Sprite
-from src.core.services import input_manager
+from src.core.services import input_manager, resource_manager
 from typing import Callable, override
 from .component import UIComponent
 from src.interface.components.label import Label
@@ -37,14 +37,8 @@ class Checkbox(UIComponent):
         self.fonts = pg.font.Font(None, size)
 
     def _load_and_scale(self, img_path:str, size:int):
-        try:
-            img = pg.image.load(img_path).convert_alpha()
-            return pg.transform.scale(img, (size, size))
-
-        except pg.error:
-            missing = pg.Surface((size,size))
-            missing.fill((1,2,3))
-            return missing
+        img = resource_manager.get_image(img_path)
+        return pg.transform.scale(img, (size, size))
         
     @override
     def update(self, dt: float):

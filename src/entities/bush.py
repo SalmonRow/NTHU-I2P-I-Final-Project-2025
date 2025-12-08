@@ -66,14 +66,19 @@ class BushEncounter(Entity):
         if input_manager.key_pressed(pg.K_e):
             Logger.info('pressed e')
             if random.random() < self.CHANCE:
-
                 if scene_manager._next_scene is not None:
                     return
 
                 # 7. ⚔️ BATTLE TRIGGERED: Safely define variables here 
                 wild_mon_data = random.choice(self.monster_pool)
                 self.game_manager.current_battle_en = self
-                player_mon = self.game_manager.bag._monsters_data[0]
+                
+                player_mon = self.game_manager.bag.get_first_available_monster()
+                
+                if not player_mon:
+                     Logger.info("Cannot start battle: No healthy pokemon!")
+                     self.game_manager.current_battle_en = None
+                     return
 
                 scene_manager.change_scene(
                     'battle', 
@@ -90,10 +95,6 @@ class BushEncounter(Entity):
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
         if self.detected:
             self.warning_sign.draw(screen, camera)
-            self.press_e.draw(screen)
-            
-        if GameSettings.DRAW_HITBOXES:
-            pg.draw.rect(screen, (0, 255, 0), camera.transform_rect(self.hitbox), 1)
 
     @classmethod
     @override

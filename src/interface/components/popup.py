@@ -2,8 +2,8 @@ from __future__ import annotations
 import pygame as pg
 
 from src.sprites import Sprite
-from src.core.services import input_manager
-from src.utils import Logger, load_img
+from src.core.services import input_manager, resource_manager
+from src.utils import Logger
 from typing import Callable, override
 from .component import UIComponent
 from .button import Button
@@ -26,7 +26,7 @@ class Popup(UIComponent):
     ):
         super().__init__()
 
-        self.frame_img = load_img(frame_path)
+        self.frame_img = resource_manager.get_image(frame_path)
 
         frame_width = int(size[0] * 0.6)
         frame_height = int(size[1] * 0.7)

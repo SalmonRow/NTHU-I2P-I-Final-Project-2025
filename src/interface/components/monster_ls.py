@@ -2,6 +2,7 @@ import pygame as pg
 from src.utils import GameSettings, Logger
 from typing import List, Any
 from src.interface.components.label import Label
+from src.core.services import resource_manager
 
 class Monster:
     def __init__(self, name, hp, max_hp, level, sprite_path):
@@ -12,7 +13,7 @@ class Monster:
         self.sprite_path = sprite_path
 
 class MonsterListComponent:
-    PANEL_PATH = "assets/images/UI/raw/UI_Flat_InputField01a.png"
+    PANEL_PATH = "UI/raw/UI_Flat_InputField01a.png"
     PANEL_SIZE = (320, 60)
     SPRITE_SIZE = 60
     FILL_PLACEHOLDER = (255,0,255)
@@ -27,19 +28,12 @@ class MonsterListComponent:
         self._panel_surface = self._load_and_scale(self.PANEL_PATH, self.PANEL_SIZE) #load panel here
 
     def _load_and_scale(self, path: str, size: tuple[int,int]):
-        try:
-            image = pg.image.load(path).convert_alpha()
-            return pg.transform.scale(image, size)
-        except pg.error as e:
-            Logger.warning(f'Failed to load asset {path} : {e}')
-            placerholder = pg.Surface(size)
-            placerholder.fill(self.FILL_PLACEHOLDER)
-            return placerholder
+        img = resource_manager.get_image(path)
+        return pg.transform.scale(img, size)
         
     def _get_monster_sprites(self, path: str):
         if path not in self.monster_image:
-            complete_path = f'assets/images/{path}'
-            self.monster_image[path] = self._load_and_scale(complete_path, (self.SPRITE_SIZE, self.SPRITE_SIZE))
+            self.monster_image[path] = self._load_and_scale(path, (self.SPRITE_SIZE, self.SPRITE_SIZE))
         return self.monster_image[path]
 
     def update(self, dt):

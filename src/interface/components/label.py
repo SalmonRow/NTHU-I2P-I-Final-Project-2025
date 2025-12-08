@@ -2,17 +2,21 @@ import pygame as pg
 from src.utils import GameSettings
 
 class Label:
-    FONT_PATH = "assets/fonts/Minecraft.ttf"
+    FONT_PATH_ONE = "assets/fonts/Minecraft.ttf"
+    FONT_PATH_TWO = "assets/fonts/BoldPixels.ttf"
     DEFAUL_SIZE = 24
     BLACK = (0,0,0)
 
     def __init__(self, text: str, x: int, y: int,
-                 color: tuple[int,int,int]=BLACK, align: str = "topleft", fontsize: int = DEFAUL_SIZE):
+                 color: tuple[int,int,int]=BLACK, align: str = "topleft", fontsize: int = DEFAUL_SIZE, fontfam: int = 1):
         self.text = text
         self.color = color
         self.align = align
 
-        self.font = pg.font.Font(self.FONT_PATH, fontsize)
+        if fontfam == 1:
+            self.font = pg.font.Font(self.FONT_PATH_ONE, fontsize)
+        else:
+            self.font = pg.font.Font(self.FONT_PATH_TWO, fontsize)
         self._render_text(x,y)
 
     def _render_text(self, x, y):

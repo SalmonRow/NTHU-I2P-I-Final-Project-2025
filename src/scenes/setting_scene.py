@@ -1,7 +1,7 @@
 #TODO HACKATHON 5
 import pygame as pg
 
-from src.utils import GameSettings
+from src.utils import GameSettings, Logger
 from src.sprites import BackgroundSprite
 from src.scenes.scene import Scene
 from src.interface.components import Button, Popup, Label, Slider, Checkbox
@@ -43,27 +43,55 @@ class SettingScene(Scene):
 
         #components in setting popup
         rec = self.setting_panel.frame_rect
+        setting_frame_x = rec.x
+        setting_frame_y = rec.y
+        setting_frame_width = rec.width
+        
+        # Volume slider
+        slider_width = 300
+        slider_height = 40
+        slider_x = setting_frame_x + (setting_frame_width // 2) - (slider_width // 2)
+        slider_y = setting_frame_y + 150
+
         self.volume_slider = Slider(
-            x=rec.left + self.CORNER_OFFSET * 2, y=rec.center[1]-80,
-            width=200, 
-            height=40,
+            x=slider_x, y=slider_y,
+            width=slider_width, height=slider_height,
             min_val=0.0, max_val=100.0,
             initial_val=sound_manager.get_volume() * 100,
             val_change=lambda v: sound_manager.set_volume(v/100),
-            bar_path="assets/images/UI/raw/UI_Flat_Bar05a.png",
-            handle_path="assets/images/UI/raw/UI_Flat_Button01a_3.png",
+            bar_path="UI/raw/UI_Flat_Bar05a.png",
+            handle_path="UI/raw/UI_Flat_Button01a_3.png",
             label= "Master Volume"
         )
         self.setting_panel.interactive_components.append(self.volume_slider)
 
+        # Checkboxes
+        cb_size = 50
+        cb_x = setting_frame_x + 140
+        cb_y = slider_y + slider_height + 50
+
+        self.hitbox_checkbox = Checkbox(
+            x=cb_x, y=cb_y,
+            size=cb_size,
+            initial_checked=GameSettings.DRAW_HITBOXES,
+            on_toggle=lambda checked: (
+                setattr(GameSettings, "DRAW_HITBOXES", checked),
+                Logger.info(f"Hitboxes has been set to :{checked}")
+            ),
+            label="Hitbox",
+            unchecked_path="UI/raw/UI_Flat_ToggleOff01a.png", 
+            checked_path='UI/raw/UI_Flat_ToggleOn01a.png',
+        )
+        self.setting_panel.interactive_components.append(self.hitbox_checkbox)
+
         self.mute_check = Checkbox(
-            x=rec.left + self.CORNER_OFFSET * 2, y=rec.center[1]-20,
-            size= 50, 
+            x=cb_x, y=cb_y + 75,
+            size=cb_size, 
             initial_checked= (sound_manager.get_volume() == 0), 
             on_toggle=self.toggle_mute, 
             label="Mute Audio",
-            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff01a.png", 
-            checked_path='assets/images/UI/raw/UI_Flat_ToggleLeftOn01a.png',
+            unchecked_path="UI/raw/UI_Flat_ToggleOff01a.png", 
+            checked_path='UI/raw/UI_Flat_ToggleOn01a.png',
         )
         self.setting_panel.interactive_components.append(self.mute_check)
     #overlay
@@ -94,7 +122,6 @@ class SettingScene(Scene):
     @override
     def exit(self) -> None:
         sound_manager.stop_all_sounds() #stop musics for now, idk bruh
-
         pass
 
     @override

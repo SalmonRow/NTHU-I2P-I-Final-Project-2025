@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame as pg
 
 from src.sprites import Sprite
-from src.core.services import input_manager
+from src.core.services import input_manager, resource_manager
 from typing import Callable, override
 from .component import UIComponent
 from src.interface.components.label import Label
@@ -41,13 +41,8 @@ class Slider(UIComponent):
         self._update_handle_pos()
 
     def _load_and_scale(self, path: str, width: int, height: int):
-        try:
-            img = pg.image.load(path).convert_alpha()
-            return pg.transform.scale(img, (width, height))
-        except pg.error:
-            missing = pg.Surface((width,height))
-            missing.fill((255,0,255))
-            return missing
+        img = resource_manager.get_image(path)
+        return pg.transform.scale(img, (width, height))
 
     def _update_handle_pos(self):    
         normalized = (self.value - self.min_val) / (self.max_val - self.min_val)

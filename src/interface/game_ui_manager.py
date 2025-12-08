@@ -115,8 +115,8 @@ class GameSceneUIManager:
             min_val=0.0, max_val=100.0,
             initial_val=sound_manager.get_volume() * 100,
             val_change=lambda v: sound_manager.set_volume(v/100),
-            bar_path="assets/images/UI/raw/UI_Flat_Bar05a.png",
-            handle_path="assets/images/UI/raw/UI_Flat_Button01a_3.png",
+            bar_path="UI/raw/UI_Flat_Bar05a.png",
+            handle_path="UI/raw/UI_Flat_Button01a_3.png",
             label= "Master Volume"
         )
         self.setting_popup.interactive_components.append(self.volume_slider)
@@ -135,8 +135,8 @@ class GameSceneUIManager:
                 Logger.info(f"Hitboxes has been set to :{checked}")
             ),
             label="Hitbox",
-            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff01a.png", 
-            checked_path='assets/images/UI/raw/UI_Flat_ToggleLeftOn01a.png',
+            unchecked_path="UI/raw/UI_Flat_ToggleOff01a.png", 
+            checked_path='UI/raw/UI_Flat_ToggleOn01a.png',
         )
         self.setting_popup.interactive_components.append(self.hitbox_checkbox)
 
@@ -146,8 +146,8 @@ class GameSceneUIManager:
             initial_checked= (sound_manager.get_volume() == 0), 
             on_toggle=self.toggle_mute, 
             label="Mute Audio",
-            unchecked_path="assets/images/UI/raw/UI_Flat_ToggleOff01a.png", 
-            checked_path='assets/images/UI/raw/UI_Flat_ToggleLeftOn01a.png',
+            unchecked_path="UI/raw/UI_Flat_ToggleOff01a.png", 
+            checked_path='UI/raw/UI_Flat_ToggleOn01a.png',
         )
         self.setting_popup.interactive_components.append(self.mute_check)
 
