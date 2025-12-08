@@ -10,8 +10,9 @@ from typing import override
 class Player(Entity):
     speed: float = 4.0 * GameSettings.TILE_SIZE
     game_manager: GameManager
+
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
-        super().__init__(x, y, game_manager)
+        super().__init__(x, y, game_manager, "character/ow1.png")
         self.cooldown = 0.0
 
     def _set_direction(self, direction: Direction):
@@ -86,7 +87,13 @@ class Player(Entity):
                 self.game_manager.switch_map(dest)
                 self.cooldown += 0.5
                 
-        super().update(dt)
+
+        if movement_vector.length_squared() > 0:
+             super().update(dt)
+        else:
+             super().update(0)
+             self.animation.accumulator = 0
+
 
     @override
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:

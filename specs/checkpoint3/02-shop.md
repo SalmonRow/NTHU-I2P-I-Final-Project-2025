@@ -2,6 +2,8 @@
 
 Score: 2 Points
 
+![Alt Text](./Checkpoint3_gif/Shop.gif)
+
 - [ ] Create an new npc that can interact, then overlay appear to buy or sell
 - [ ] Must be synchronized with the bag items
 

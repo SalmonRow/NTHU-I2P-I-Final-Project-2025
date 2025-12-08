@@ -3,16 +3,16 @@
     {
       "path": "map.tmx",
       "enemy_trainers": [
-        { "trainer": "bob", "x": 24, "y": 29, "classification": "stationary", "facing": "DOWN", "max_tiles": 2, "monster": {
-          "name" : "Gengar", "hp": 110, "max_hp": 120, "level": 30, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        { "trainer": "Takahashi","sprite": "character/ow4.png", "x": 24, "y": 29, "classification": "stationary", "facing": "DOWN", "max_tiles": 2, "monster": {
+          "name" : "Gengar", "atk": 30, "hp": 110, "max_hp": 120, "level": 30, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
         }, "status": 1 },
 
-        { "trainer": "mike", "x": 54, "y": 16, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
-          "name" : "Gengar", "hp": 140, "max_hp": 140, "level": 34, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        { "trainer": "Sunny","sprite": "character/ow6.png", "x": 54, "y": 16, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
+          "name" : "Water Dude", "atk": 30, "hp": 140, "max_hp": 140, "level": 34, "defense": 30, "battle_sprite_path": "sprites/sprite13.png"
         }, "status": 1 },
 
-        { "trainer": "james", "x": 31, "y": 31, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
-          "name" : "Gengar", "hp": 110, "max_hp": 120, "level": 30, "defense": 30, "battle_sprite_path": "sprites/sprite5.png"
+        { "trainer": "Pepper","sprite": "character/ow3.png", "x": 31, "y": 31, "classification": "stationary", "facing": "UP", "max_tiles": 2, "monster": {
+          "name" : "Sleepy Pig", "atk": 100, "hp": 999, "max_hp": 999, "level": 70, "defense": 55, "battle_sprite_path": "sprites/sprite10.png"
         }, "status": 1 }
       ],
       "teleport": [

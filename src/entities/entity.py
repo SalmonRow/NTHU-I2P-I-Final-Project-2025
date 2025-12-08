@@ -7,16 +7,14 @@ from src.core import GameManager
 
 
 class Entity:
-    animation: Animation
-    direction: Direction
-    position: Position
-    game_manager: GameManager
-    hitbox: pg.Rect
+
+    sprite_path: str
     
-    def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
+    def __init__(self, x: float, y: float, game_manager: GameManager, sprite_path: str) -> None:
         # Sprite is only for debug, need to change into animations
+        self.sprite_path = sprite_path
         self.animation = Animation(
-            "character/ow1.png", ["down", "left", "right", "up"], 4,
+            sprite_path, ["down", "left", "right", "up"], 4,
             (GameSettings.TILE_SIZE, GameSettings.TILE_SIZE)
         )
         

@@ -36,12 +36,13 @@ class EnemyTrainer(Entity):
         x: float,
         y: float,
         game_manager: GameManager,
+        sprite_path: str,
         classification: EnemyTrainerClassification = EnemyTrainerClassification.STATIONARY,
         max_tiles: int | None = 2,
         facing: Direction | None = None,
         monster: Monster | None = None,
     ) -> None:
-        super().__init__(x, y, game_manager)
+        super().__init__(x, y, game_manager, sprite_path)
         self.classification = classification
         self.max_tiles = max_tiles
         self.monster = monster
@@ -178,6 +179,7 @@ class EnemyTrainer(Entity):
             data["x"] * GameSettings.TILE_SIZE,
             data["y"] * GameSettings.TILE_SIZE,
             game_manager,
+            data.get("sprite", "character/ow1.png"),
             classification,
             max_tiles,
             facing,
@@ -191,4 +193,5 @@ class EnemyTrainer(Entity):
         base["facing"] = self.direction.name
         base["max_tiles"] = self.max_tiles
         base['monster'] = self.monster
+        base["sprite"] = self.sprite_path
         return base

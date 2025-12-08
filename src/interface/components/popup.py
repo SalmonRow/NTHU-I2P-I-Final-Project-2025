@@ -7,6 +7,9 @@ from src.utils import Logger, load_img
 from typing import Callable, override
 from .component import UIComponent
 from .button import Button
+from .label import Label
+
+BUTTON_SIZE = 80
 
 class Popup(UIComponent):
     frame_img: pg.Surface
@@ -36,11 +39,12 @@ class Popup(UIComponent):
         self.interactive_components = []
         self.internal_buttons = []
 
+        #interbal BUTTONS
         internal_close_button = Button(
             "UI/button_x.png", 
             "UI/button_x_hover.png",
-            self.frame_rect.right - 80, self.frame_rect.top + 20, 
-            60, 60,     
+            self.frame_rect.right + 10, self.frame_rect.top, 
+            BUTTON_SIZE, BUTTON_SIZE,    
             on_click=close_callback
         )
         self.internal_buttons.append(internal_close_button)

@@ -29,7 +29,7 @@ class BushEncounter(Entity):
         game_manager: GameManager,
         monster_pool: list[Monster],
     ) -> None:
-        super().__init__(x,y, game_manager)
+        super().__init__(x,y, game_manager, "character/ow1.png") # TODO: Add bush sprite? 
 
         self.monster_pool = monster_pool
         # Set up warning sign

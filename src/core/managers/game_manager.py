@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.entities.enemy_trainer import EnemyTrainer
     from src.data.bag import Bag
 
-class GameManager:
+class GameManager:  
     # Entities
     player: Player | None
     enemy_trainers: dict[str, list[EnemyTrainer]]

@@ -23,21 +23,13 @@ class GameScene(Scene):
     
     def __init__(self):
         super().__init__()
-        
-        # Initialize managers
         self._init_managers()
-        
-        # Initialize state
         self._init_state()
         
         # Initialize UI Manager
         self.ui_manager = GameSceneUIManager(self)
 
-
-
-
     def _init_managers(self) -> None:
-        """Initialize game and online managers."""
         # Load game manager
         manager = GameManager.load("saves/game0.json")
         if manager is None:
