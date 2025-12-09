@@ -5,7 +5,9 @@ from src.core.services import input_manager
 from src.utils import Position, PositionCamera, GameSettings, Logger, Direction
 # from src.core import GameManager
 import math
+import random
 from typing import override
+from src.sprites.particle import Particle
 
 class Player(Entity):
     speed: float = 4.0 * GameSettings.TILE_SIZE
@@ -14,6 +16,8 @@ class Player(Entity):
     def __init__(self, x: float, y: float, game_manager: GameManager) -> None:
         super().__init__(x, y, game_manager, "character/ow1.png")
         self.cooldown = 0.0
+        self.particle_cooldown = 0.0
+        self.particles: list[Particle] = []
 
     def _set_direction(self, direction: Direction):
         if self.direction == direction:
@@ -47,12 +51,27 @@ class Player(Entity):
             dis.x += movement_speed
             self._set_direction(Direction.RIGHT)
         
-
         movement_vector = pg.math.Vector2(dis.x, dis.y)
         if movement_vector.length_squared() > 0:
             movement_vector = movement_vector.normalize()
 
-        to_move = self.speed * dt * 1.5
+        speed_multiplier = 1.0
+        if input_manager.key_down(pg.K_LSHIFT) or input_manager.key_down(pg.K_RSHIFT):
+            speed_multiplier = 1.5
+            
+            # Spawn particles if moving
+            self.particle_cooldown -= dt
+            if movement_vector.length_squared() > 0:
+                if self.particle_cooldown <= 0:
+                    p_x = self.position.x + GameSettings.TILE_SIZE / 2
+                    p_y = self.position.y + GameSettings.TILE_SIZE
+                    self.particles.append(Particle(p_x, p_y))
+                    self.particle_cooldown = random.uniform(0.05, 0.1)
+
+        to_move = self.speed * dt * 1.5 * speed_multiplier
+        
+        # Update particles
+        self.particles = [p for p in self.particles if p.update(dt)]
     
 
         self.position.x += movement_vector.x * to_move 
@@ -97,6 +116,8 @@ class Player(Entity):
 
     @override
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
+        for p in self.particles:
+            p.draw(screen, camera)
         super().draw(screen, camera)
         
     @override

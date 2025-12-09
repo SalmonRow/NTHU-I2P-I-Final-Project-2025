@@ -3,6 +3,7 @@ from src.utils import Logger, GameSettings
 from src.core.services import sound_manager
 from src.interface.components import Button, Popup, Checkbox, Slider, MonsterListComponent, ItemListComponent
 from src.core import GameManager
+from src.core.services import scene_manager
 
 class GameSceneUIManager:
     def __init__(self, game_scene):
@@ -94,7 +95,6 @@ class GameSceneUIManager:
         )
         self.setting_popup.interactive_components.append(self.load_button)
     def _init_overlay_text(self) -> None:
-        
         pass
 
     def _init_setting_components(self) -> None:
@@ -150,6 +150,19 @@ class GameSceneUIManager:
             checked_path='UI/raw/UI_Flat_ToggleOn01a.png',
         )
         self.setting_popup.interactive_components.append(self.mute_check)
+
+        # Buttons
+        self.menuscene_button = Button(
+            "UI/button_back.png",
+            "UI/button_back_hover.png",
+            self.setting_popup.frame_rect.right,
+            self.setting_popup.frame_rect.bottom,
+            80,
+            80,
+            on_click=lambda: scene_manager.change_scene("menu")
+        )
+
+        self.setting_popup.interactive_components.append(self.menuscene_button)
 
     def _init_bag_components(self) -> None:
         """Create monster and item list components for the bag popup."""

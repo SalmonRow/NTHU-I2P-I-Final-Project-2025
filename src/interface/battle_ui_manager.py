@@ -6,6 +6,8 @@ from src.interface.components import Button, Popup, Label
 GREEN = (0, 200, 0)
 RED = (200, 0, 0)
 GRAY = (130, 130, 130)
+D_GRAY = (128, 139, 161)
+DD_GRAY = (58, 69, 81)
 WHITE = (255, 255, 255)
 
 class BattleUIManager:
@@ -33,10 +35,15 @@ class BattleUIManager:
     enem_sprite_rect: pg.Rect | None = None
 
     # Constants
-    ACTION_BUTTON_SIZE = 80
+    ACTION_BUTTON_SIZE = 75
     HP_BAR_WIDTH = 200
     HP_BAR_HEIGHT = 20
     STATS_PAN_SIZE = (520, 130)
+
+    POP_OFFSET = (1.6, 1.7)
+    ACTION_BUT_PAN = (660, 360)
+    LOG_PAN = (600, 270)
+
 
     def __init__(self, scene, 
                  on_attack: Callable, 
@@ -46,10 +53,20 @@ class BattleUIManager:
         
         # --- Panels ---
         self.player_mon_pan = Popup("UI/raw/UI_Flat_Banner03a.png", self.STATS_PAN_SIZE, close_callback=None)
-        self.enem_mon_pan = Popup("UI/raw/UI_Flat_Banner03a.png", self.STATS_PAN_SIZE, close_callback=None)
+        self.enem_mon_pan = Popup("UI/raw/UI_Flat_Banner04b.png", self.STATS_PAN_SIZE, close_callback=None)
         self.player_mon_pan.interactive_components = []
         self.enem_mon_pan.interactive_components = []
 
+            #Action buttons panel
+        self.battle_bg_pan = Popup(
+            "UI/raw/UI_Flat_Frame01a.png", size=self.ACTION_BUT_PAN, close_callback=None
+            )
+        self.action_log_screen = Popup(
+            "UI/raw/UI_Flat_Frame01a.png", size=self.LOG_PAN, close_callback=None
+        )
+
+        self.battle_bg_pan.interactive_components = []
+        self.action_log_screen.interactive_components = []
         
         # --- Buttons ---
         self.atk_button = Button(
@@ -78,6 +95,9 @@ class BattleUIManager:
             text="CATCH",
             on_click=on_catch
         )
+
+        # -- adding buttons to panel
+        
         
         # --- Labels ---
         self.turn_label = Label(text="Turn: PLAYER", x=75, y=50, fontsize=30)
@@ -90,8 +110,8 @@ class BattleUIManager:
             enemy_full  = load_img(enem_mon.get("battle_sprite_path", "sprites/pokemon/Bulbasaur.png"))
 
             # Processing sprites (same logic as before)
-            P_SCALE = 6.5
-            E_SCALE = 3
+            P_SCALE = 5
+            E_SCALE = 3.5
             w1, h1 = player_full.get_size()
             
             # Assuming sprite sheet/strip logic from original:
@@ -106,7 +126,7 @@ class BattleUIManager:
             
             # Positioning
             self.player_sprite_rect = self.player_sprite.get_rect()
-            self.player_sprite_rect.bottomleft = (-20, GameSettings.SCREEN_HEIGHT)
+            self.player_sprite_rect.bottomleft = (5, GameSettings.SCREEN_HEIGHT)
 
             self.enem_sprite_rect = self.enem_sprite.get_rect()
             self.enem_sprite_rect.topleft = (GameSettings.SCREEN_WIDTH - self.enem_sprite_rect.width - 80, 60)
@@ -126,11 +146,23 @@ class BattleUIManager:
     def draw(self, screen: pg.Surface, player_mon: Dict, enem_mon: Dict, 
              current_turn: str, is_wild: bool, battle_ended: bool, result_text: str | None):
         
+        #utils
+        x = GameSettings.SCREEN_WIDTH
+        y = GameSettings.SCREEN_HEIGHT
         # Draw Labels
-        self.turn_label.draw(screen)
 
         # Draw Panels
-        self.player_mon_pan.set_position(100, 250)
+        self.battle_bg_pan.set_position(x//2 + (x // 2 - (self.ACTION_BUT_PAN[0]*0.6 + 40)),
+                                         y // 3 * self.POP_OFFSET[1] + 40)
+        self.action_log_screen.set_position(x - x + 40, y - y + 40)
+        
+        self.battle_bg_pan.draw(screen)
+        self.action_log_screen.draw(screen)
+        pg.draw.rect(screen, DD_GRAY, (x - x + 60, y - y + 78, self.LOG_PAN[0]*0.60 - 43, self.LOG_PAN[1]*0.50))
+        pg.draw.rect(screen, D_GRAY, (x - x + 60, y - y + 78, self.LOG_PAN[0]*0.60 - 43, self.LOG_PAN[1]*0.50), 2)
+
+        #draw the panels for hp
+        self.player_mon_pan.set_position(80, 300)
         self.enem_mon_pan.set_position(900, 50)
         self.player_mon_pan.draw(screen)
         self.enem_mon_pan.draw(screen)
@@ -140,6 +172,7 @@ class BattleUIManager:
             screen.blit(self.player_sprite, self.player_sprite_rect)
         if self.enem_sprite and self.enem_sprite_rect:
             screen.blit(self.enem_sprite, self.enem_sprite_rect)
+
 
         # Draw HP Bars
         player_panel = self.player_mon_pan.frame_rect
@@ -164,6 +197,8 @@ class BattleUIManager:
             self.result_label.set_text(f"{result_text.upper()}!")
             self.result_label.draw(screen)
             self.prompt_label.draw(screen)
+
+        self.turn_label.draw(screen)
 
     def _draw_hp_bar(self, screen: pg.Surface, x: int, y: int, current_hp: int, max_hp: int, name: str):
         hp_ratio = current_hp / max_hp if max_hp > 0 else 0
