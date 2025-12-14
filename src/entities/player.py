@@ -108,7 +108,11 @@ class Player(Entity):
                 
 
         if movement_vector.length_squared() > 0:
-             super().update(dt)
+            if input_manager.key_down(pg.K_LSHIFT) or input_manager.key_down(pg.K_RSHIFT):
+             
+                super().update(dt * 1.75)
+            else:
+                super().update(dt )
         else:
              super().update(0)
              self.animation.accumulator = 0

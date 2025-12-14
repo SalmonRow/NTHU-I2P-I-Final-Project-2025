@@ -46,7 +46,7 @@ class Map:
                 pg.draw.rect(screen, (255, 0, 0), camera.transform_rect(rect), 1)
 
             for rect in self._bushmap:
-                pg.draw.rect(screen, (255, 0, 0), camera.transform_rect(rect), 1)
+                pg.draw.rect(screen, (0, 255, 0), camera.transform_rect(rect), 1)
 
         
     def check_collision(self, rect: pg.Rect) -> bool:
@@ -103,12 +103,6 @@ class Map:
             if isinstance(layer, pytmx.TiledTileLayer) and ("collision" in layer.name.lower() or "house" in layer.name.lower()):
                 for x, y, gid in layer:
                     if gid != 0:
-                        '''
-                        [TODO HACKATHON 4]
-                        rects.append(pg.Rect(...))
-                        Append the collision rectangle to the rects[] array
-                        Remember scale the rectangle with the TILE_SIZE from settings
-                        '''
                         rects.append(pg.Rect(
                             x * GameSettings.TILE_SIZE,
                             y * GameSettings.TILE_SIZE,
@@ -122,12 +116,6 @@ class Map:
             if isinstance(layer, pytmx.TiledTileLayer) and ("pokemonbush" in layer.name.lower()):
                 for x, y, gid in layer:
                     if gid != 0:
-                        '''
-                        [TODO HACKATHON 4]
-                        rects.append(pg.Rect(...))
-                        Append the collision rectangle to the rects[] array
-                        Remember scale the rectangle with the TILE_SIZE from settings
-                        '''
                         rects.append(pg.Rect(
                             x * GameSettings.TILE_SIZE,
                             y * GameSettings.TILE_SIZE,
@@ -139,6 +127,11 @@ class Map:
     def from_dict(cls, data: dict) -> "Map":
         tp = [Teleport.from_dict(t) for t in data["teleport"]]
         pos = Position(data["player"]["x"] * GameSettings.TILE_SIZE, data["player"]["y"] * GameSettings.TILE_SIZE)
+        if "wild_mon" in data:
+            from src.core.data_loader import DataLoader
+            for mon in data["wild_mon"]:
+                DataLoader.instance().hydrate_monster(mon)
+                
         return cls(data["path"], tp, pos, data)
 
     def to_dict(self):
@@ -154,7 +147,21 @@ class Map:
         if "bush" in self._raw_data:
             result["bush"] = self._raw_data["bush"]
         if "wild_mon" in self._raw_data:
-            result["wild_mon"] = self._raw_data["wild_mon"]
+            # Note: _raw_data might hold the original loaded dict. If we modified the monsters inside,
+            # we need to ensure we are saving the potentially modified state?
+            # Actually, wild monsters on map usually reset or are static config.
+            # But if we modified them in-memory, we should save clean versions.
+            # Assuming self._raw_data['wild_mon'] is the list of dicts we use:
+            clean_wild = []
+            for mon in self._raw_data["wild_mon"]:
+                clean_mon = {
+                    "name": mon.get("name"),
+                    "level": mon.get("level", 1),
+                    "hp": mon.get("hp", 0),
+                    "moves": mon.get("moves", [])
+                }
+                clean_wild.append(clean_mon)
+            result["wild_mon"] = clean_wild
         if "enemy_trainers" in self._raw_data:
             result["enemy_trainers"] = self._raw_data["enemy_trainers"]
             

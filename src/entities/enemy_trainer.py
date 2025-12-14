@@ -180,6 +180,8 @@ class EnemyTrainer(Entity):
         monster: Monster | None = None
         monster_data = data.get("monster")    
         if monster_data:
+            from src.core.data_loader import DataLoader
+            DataLoader.instance().hydrate_monster(monster_data)
             monster = monster_data
 
         return cls(
@@ -199,6 +201,18 @@ class EnemyTrainer(Entity):
         base["classification"] = self.classification.value
         base["facing"] = self.direction.name
         base["max_tiles"] = self.max_tiles
-        base['monster'] = self.monster
+        if self.monster:
+            clean_mon = {
+                "name": self.monster.get("name"),
+                "level": self.monster.get("level", 1),
+                "hp": self.monster.get("hp", 0),
+                "moves": self.monster.get("moves", [])
+            }
+            if "xp" in self.monster:
+                clean_mon["xp"] = self.monster["xp"]
+            base['monster'] = clean_mon
+        else:
+            base['monster'] = None
+            
         base["sprite"] = self.sprite_path
         return base

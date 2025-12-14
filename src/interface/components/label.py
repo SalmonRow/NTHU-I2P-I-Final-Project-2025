@@ -36,10 +36,22 @@ class Label:
         if self.text != new_text:
             self.text = new_text
 
-            self._render_text(self.rect.x, self.rect.y)
+            if self.align == "center":
+                x, y = self.rect.center
+            elif self.align == "topright":
+                x, y = self.rect.topright
+            elif self.align == "midbottom":
+                x, y = self.rect.midbottom
+            else: # topleft and others
+                x, y = self.rect.topleft
+
+            self._render_text(x, y)
 
     def draw(self, screen: pg.Surface):
         screen.blit(self.surface, self.rect)
+
+    def update(self, dt: float):
+        pass
 
     @classmethod
     def from_center(

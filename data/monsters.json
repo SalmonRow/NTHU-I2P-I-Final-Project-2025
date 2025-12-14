@@ -1,0 +1,260 @@
+{
+    "Bulbasaur": {
+        "type": "Grass",
+        "base_hp": 45,
+        "base_atk": 49,
+        "base_def": 49,
+        "speed": 45,
+        "base_xp": 64,
+        "evolution": {
+            "level": 16,
+            "to": "Ivysaur"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite1.png",
+        "learnset": {
+            "5": "Vine Whip",
+            "10": "Razor Leaf",
+            "45": "Solar Beam"
+        }
+    },
+    "Ivysaur": {
+        "type": "Grass",
+        "base_hp": 60,
+        "base_atk": 62,
+        "base_def": 63,
+        "speed": 60,
+        "base_xp": 142,
+        "evolution": {
+            "level": 32,
+            "to": "Venusaur"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite2.png",
+        "battle_sprite_path": "sprites/sprite2.png",
+        "learnset": {
+            "5": "Vine Whip",
+            "10": "Razor Leaf",
+            "45": "Solar Beam"
+        }
+    },
+    "Venusaur": {
+        "type": "Grass",
+        "base_hp": 80,
+        "base_atk": 82,
+        "base_def": 83,
+        "speed": 80,
+        "base_xp": 236,
+        "menu_sprite_path": "menu_sprites/menusprite3.png",
+        "battle_sprite_path": "sprites/sprite3.png",
+        "learnset": {
+            "5": "Vine Whip",
+            "10": "Razor Leaf",
+            "45": "Solar Beam"
+        }
+    },
+    "Charmander": {
+        "type": "Fire",
+        "base_hp": 39,
+        "base_atk": 52,
+        "base_def": 43,
+        "speed": 65,
+        "base_xp": 62,
+        "evolution": {
+            "level": 16,
+            "to": "Charmeleon"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite7.png",
+        "battle_sprite_path": "sprites/sprite7.png",
+        "learnset": {
+            "5": "Ember",
+            "10": "Fire Fang",
+            "40": "Fire Blast"
+        }
+    },
+    "Charmeleon": {
+        "type": "Fire",
+        "base_hp": 58,
+        "base_atk": 64,
+        "base_def": 58,
+        "speed": 80,
+        "base_xp": 142,
+        "evolution": {
+            "level": 36,
+            "to": "Charizard"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite8.png",
+        "battle_sprite_path": "sprites/sprite8.png",
+        "learnset": {
+            "5": "Ember",
+            "10": "Fire Fang",
+            "40": "Fire Blast"
+        }
+    },
+    "Charizard": {
+        "type": "Fire",
+        "base_hp": 78,
+        "base_atk": 84,
+        "base_def": 78,
+        "speed": 100,
+        "base_xp": 240,
+        "menu_sprite_path": "menu_sprites/menusprite9.png",
+        "battle_sprite_path": "sprites/sprite9.png",
+        "learnset": {
+            "5": "Ember",
+            "10": "Fire Fang",
+            "40": "Fire Blast"
+        }
+    },
+    "Blastoise": {
+        "type": "Water",
+        "base_hp": 79,
+        "base_atk": 83,
+        "base_def": 100,
+        "speed": 78,
+        "base_xp": 239,
+        "menu_sprite_path": "menu_sprites/menusprite3.png",
+        "battle_sprite_path": "sprites/sprite3.png",
+        "learnset": {
+            "5": "Water Gun",
+            "10": "Aqua Tail",
+            "40": "Hydro Pump"
+        }
+    },
+    "Froakie": {
+        "type": "Water",
+        "base_hp": 41,
+        "base_atk": 56,
+        "base_def": 40,
+        "speed": 71,
+        "base_xp": 63,
+        "evolution": {
+            "level": 16,
+            "to": "Frogadier"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite12.png",
+        "battle_sprite_path": "sprites/sprite12.png",
+        "learnset": {
+            "5": "Water Gun",
+            "10": "Aqua Tail",
+            "40": "Hydro Pump"
+        }
+    },
+    "Frogadier": {
+        "type": "Water",
+        "base_hp": 54,
+        "base_atk": 63,
+        "base_def": 52,
+        "speed": 97,
+        "base_xp": 122,
+        "evolution": {
+            "level": 36,
+            "to": "Greninja"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite13.png",
+        "battle_sprite_path": "sprites/sprite13.png",
+        "learnset": {
+            "5": "Water Gun",
+            "10": "Aqua Tail",
+            "40": "Hydro Pump"
+        }
+    },
+    "Greninja": {
+        "type": "Water",
+        "base_hp": 72,
+        "base_atk": 95,
+        "base_def": 67,
+        "speed": 122,
+        "base_xp": 239,
+        "menu_sprite_path": "menu_sprites/menusprite14.png",
+        "battle_sprite_path": "sprites/sprite14.png",
+        "learnset": {
+            "5": "Water Gun",
+            "10": "Aqua Tail",
+            "40": "Hydro Pump"
+        }
+    },
+    "Pikachu": {
+        "type": "Electric",
+        "base_hp": 35,
+        "base_atk": 55,
+        "base_def": 40,
+        "speed": 90,
+        "base_xp": 112,
+        "evolution": {
+            "level": 26,
+            "to": "Blastoise"
+        },
+        "menu_sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite1.png",
+        "learnset": {
+            "5": "Thunder Shock",
+            "10": "Spark",
+            "35": "Thunderbolt"
+        }
+    },
+    "Raichu": {
+        "type": "Electric",
+        "base_hp": 60,
+        "base_atk": 90,
+        "base_def": 55,
+        "speed": 110,
+        "base_xp": 218,
+        "menu_sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite1.png",
+        "learnset": {
+            "5": "Thunder Shock",
+            "10": "Spark",
+            "35": "Thunderbolt"
+        }
+    },
+    "Gengar": {
+        "type": "Ghost",
+        "base_hp": 60,
+        "base_atk": 65,
+        "base_def": 60,
+        "speed": 110,
+        "base_xp": 225,
+        "menu_sprite_path": "menu_sprites/menusprite11.png",
+        "battle_sprite_path": "sprites/sprite11.png",
+        "learnset": {
+            "25": "Shadow Punch",
+            "35": "Shadow Ball",
+            "45": "Sludge Bomb"
+        }
+    },
+    "Dragonite": {
+        "type": "Dragon",
+        "base_hp": 91,
+        "base_atk": 134,
+        "base_def": 95,
+        "speed": 80,
+        "base_xp": 270,
+        "menu_sprite_path": "menu_sprites/menusprite6.png",
+        "battle_sprite_path": "sprites/sprite6.png",
+        "learnset": {
+            "55": "Dragon Claw",
+            "60": "Dragon Pulse",
+            "70": "Hyper Beam"
+        }
+    },
+    "Water Dude": {
+        "type": "Water",
+        "base_hp": 70,
+        "base_atk": 70,
+        "base_def": 70,
+        "speed": 70,
+        "base_xp": 150,
+        "menu_sprite_path": "menu_sprites/menusprite1.png",
+        "battle_sprite_path": "sprites/sprite13.png"
+    },
+    "Sleepy Pig": {
+        "type": "Normal",
+        "base_hp": 160,
+        "base_atk": 110,
+        "base_def": 65,
+        "speed": 30,
+        "base_xp": 200,
+        "menu_sprite_path": "menu_sprites/menusprite10.png",
+        "battle_sprite_path": "sprites/sprite10.png"
+    }
+}

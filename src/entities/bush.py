@@ -36,6 +36,7 @@ class BushEncounter(Entity):
         self.warning_sign = Sprite("exclamation.png", (GameSettings.TILE_SIZE // 2, GameSettings.TILE_SIZE // 2))
         self.warning_sign.update_pos(Position(x + GameSettings.TILE_SIZE // 4, y - GameSettings.TILE_SIZE // 2))
         self.detected = False
+        self.encounter_pending = False
 
         self.press_e = Label(
             "press E", GameSettings.SCREEN_WIDTH // 2 - 40, GameSettings.SCREEN_HEIGHT - 40
@@ -62,15 +63,52 @@ class BushEncounter(Entity):
         self.detected = is_colliding
         
         if not self.detected:
+            # Reset tracker when leaving bush
+            self._last_player_tile_pos = None
+            # Also reset pending battle if player runs away from the tile
+            self.encounter_pending = False
             return
-        if input_manager.key_pressed(pg.K_e):
-            Logger.info('pressed e')
-            if random.random() < self.CHANCE:
+
+        # Get Player Tile Position
+        player = self.game_manager.player
+        if not player:
+            return
+            
+        current_tile_pos = (int(player.position.x // GameSettings.TILE_SIZE), 
+                            int(player.position.y // GameSettings.TILE_SIZE))
+        
+        # Check if player moved to a NEW tile while in bush
+        if self._last_player_tile_pos != current_tile_pos:
+            self._last_player_tile_pos = current_tile_pos
+            
+            # Roll for Encounter (e.g., 15% chance per step)
+            # User asked for "random chance of that pokemon appearing"
+            ENCOUNTER_CHANCE = 0.15 
+            
+            if random.random() < ENCOUNTER_CHANCE:
+                Logger.info("Wild Encounter Found! Press SPACE to fight.")
+                self.encounter_pending = True
+        
+        # If encounter is valid/pending, check for interaction to START logic
+        if self.encounter_pending:
+            if input_manager.key_pressed(pg.K_SPACE):
                 if scene_manager._next_scene is not None:
                     return
 
-                # 7. ⚔️ BATTLE TRIGGERED: Safely define variables here 
-                wild_mon_data = random.choice(self.monster_pool)
+                from src.core.data_loader import DataLoader
+                import copy
+                
+                dl = DataLoader.instance()
+                
+                # Pick random monster
+                raw_mon_data = random.choice(self.monster_pool)
+                
+                # Deep copy to safe hydration
+                wild_mon_data = copy.deepcopy(raw_mon_data)
+                
+                # Hydrate! (Calculates stats, assigns sprite paths)
+                dl.hydrate_monster(wild_mon_data)
+                
                 self.game_manager.current_battle_en = self
                 
                 player_mon = self.game_manager.bag.get_first_available_monster()
@@ -86,15 +124,16 @@ class BushEncounter(Entity):
                     enemy_monster=wild_mon_data, 
                     is_wild_encounter=True 
                 )
-                return 
-            else:
-                Logger.info("E pressed, but random chance failed.")
+                self.encounter_pending = False # Reset
                 return 
 
     @override
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
-        if self.detected:
-            self.warning_sign.draw(screen, camera)
+        if self.encounter_pending:
+             self.warning_sign.draw(screen, camera)
+        # # Check debug draw
+        # if GameSettings.DRAW_HITBOXES:
+        #     pg.draw.rect(screen, (0, 255, 0), camera.apply_rect(self.hitbox), 1)
 
     @classmethod
     @override

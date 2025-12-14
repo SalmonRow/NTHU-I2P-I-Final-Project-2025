@@ -30,4 +30,4 @@ class Particle:
         s.set_alpha(self.alpha)
         s.fill(self.color)
         
-        screen.blit(s, (screen_pos.x, screen_pos.y - 3))
+        screen.blit(s, (screen_pos.x, screen_pos.y - 4))

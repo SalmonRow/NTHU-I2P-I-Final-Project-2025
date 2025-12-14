@@ -1,0 +1,206 @@
+{
+    "Tackle": {
+        "power": 40,
+        "type": "Normal",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Quick Attack": {
+        "power": 40,
+        "type": "Normal",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Body Slam": {
+        "power": 85,
+        "type": "Normal",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Thunder Shock": {
+        "power": 40,
+        "type": "Electric",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Thunderbolt": {
+        "power": 90,
+        "type": "Electric",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Ember": {
+        "power": 40,
+        "type": "Fire",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Flamethrower": {
+        "power": 90,
+        "type": "Fire",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Water Gun": {
+        "power": 40,
+        "type": "Water",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Hydro Pump": {
+        "power": 110,
+        "type": "Water",
+        "accuracy": 80,
+        "category": "Special"
+    },
+    "Vine Whip": {
+        "power": 45,
+        "type": "Grass",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Razor Leaf": {
+        "power": 55,
+        "type": "Grass",
+        "accuracy": 95,
+        "category": "Physical"
+    },
+    "Lick": {
+        "power": 30,
+        "type": "Ghost",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Shadow Ball": {
+        "power": 80,
+        "type": "Ghost",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Dragon Claw": {
+        "power": 80,
+        "type": "Dragon",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Outrage": {
+        "power": 120,
+        "type": "Dragon",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Solar Beam": {
+        "power": 120,
+        "type": "Grass",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Leaf Blade": {
+        "power": 90,
+        "type": "Grass",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Fire Blast": {
+        "power": 110,
+        "type": "Fire",
+        "accuracy": 85,
+        "category": "Special"
+    },
+    "Inferno": {
+        "power": 100,
+        "type": "Fire",
+        "accuracy": 50,
+        "category": "Special"
+    },
+    "Fire Fang": {
+        "power": 65,
+        "type": "Fire",
+        "accuracy": 95,
+        "category": "Physical"
+    },
+    "Surf": {
+        "power": 90,
+        "type": "Water",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Aqua Tail": {
+        "power": 90,
+        "type": "Water",
+        "accuracy": 90,
+        "category": "Physical"
+    },
+    "Waterfall": {
+        "power": 80,
+        "type": "Water",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Thunder": {
+        "power": 110,
+        "type": "Electric",
+        "accuracy": 70,
+        "category": "Special"
+    },
+    "Discharge": {
+        "power": 80,
+        "type": "Electric",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Spark": {
+        "power": 65,
+        "type": "Electric",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Shadow Punch": {
+        "power": 60,
+        "type": "Ghost",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Sludge Bomb": {
+        "power": 90,
+        "type": "Poison",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Dragon Pulse": {
+        "power": 85,
+        "type": "Dragon",
+        "accuracy": 100,
+        "category": "Special"
+    },
+    "Hurricane": {
+        "power": 110,
+        "type": "Flying",
+        "accuracy": 70,
+        "category": "Special"
+    },
+    "Fly": {
+        "power": 90,
+        "type": "Flying",
+        "accuracy": 95,
+        "category": "Physical"
+    },
+    "Hyper Beam": {
+        "power": 150,
+        "type": "Normal",
+        "accuracy": 90,
+        "category": "Special"
+    },
+    "Scratch": {
+        "power": 40,
+        "type": "Normal",
+        "accuracy": 100,
+        "category": "Physical"
+    },
+    "Slam": {
+        "power": 80,
+        "type": "Normal",
+        "accuracy": 75,
+        "category": "Physical"
+    }
+}

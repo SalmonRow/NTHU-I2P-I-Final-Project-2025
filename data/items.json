@@ -1,0 +1,52 @@
+{
+    "Heal Potion": {
+        "type": "effect_item",
+        "description": "Restores 50 HP.",
+        "effect": "heal_hp",
+        "value": 50,
+        "usable_in_bag": true,
+        "sprite_path": "ingame_ui/heal_potion.png"
+    },
+    "Power Beer": {
+        "type": "effect_item",
+        "description": "Increases Attack during battle.",
+        "effect": "buff_stat",
+        "stat": "atk",
+        "value": 1.5,
+        "usable_in_bag": false,
+        "sprite_path": "ingame_ui/power_beer.png"
+    },
+    "Defense Potion": {
+        "type": "effect_item",
+        "description": "Increases Defense during battle.",
+        "effect": "buff_stat",
+        "stat": "defense",
+        "value": 1.5,
+        "usable_in_bag": false,
+        "sprite_path": "ingame_ui/defense_potion.png"
+    },
+    "Sweet Stone": {
+        "type": "effect_item",
+        "description": "Level up a Pokemon.",
+        "effect": "level_up",
+        "value": 1,
+        "usable_in_bag": true,
+        "sprite_path": "ingame_ui/sweet_stone.png"
+    },
+    "Coins": {
+        "type": "currency",
+        "description": "Currency used to buy items.",
+        "effect": "none",
+        "value": 0,
+        "usable_in_bag": false,
+        "sprite_path": "ingame_ui/coin.png"
+    },
+    "Pokeball": {
+        "type": "capture_item",
+        "description": "Used to catch wild Pokemon.",
+        "effect": "capture",
+        "value": 0,
+        "usable_in_bag": false,
+        "sprite_path": "ingame_ui/ball.png"
+    }
+}

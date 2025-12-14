@@ -57,12 +57,17 @@ class GameScene(Scene):
         if current_map_data is None:
             return
 
-        # Change "bush" to "busP" to match your JSON
-        bush_coords = current_map_data.get("bush", [])  
         wild_monster_pool = current_map_data.get("wild_mon", [])
 
         if wild_monster_pool: 
-            for bush_data in bush_coords:
+            bush_rects = self.game_manager.current_map._bushmap
+            
+            for rect in bush_rects:
+                grid_x = rect.x // GameSettings.TILE_SIZE
+                grid_y = rect.y // GameSettings.TILE_SIZE
+                
+                bush_data = {"x": grid_x, "y": grid_y}
+                
                 bush = BushEncounter.from_dict(bush_data, self.game_manager, wild_monster_pool)
                 self.wild_encounters.append(bush)
 
@@ -177,30 +182,69 @@ class GameScene(Scene):
 
     @override
     def draw(self, screen: pg.Surface):        
+        camera = PositionCamera(0, 0)
         if self.game_manager.player:
             camera = self.game_manager.player.camera
-            
-            self.game_manager.current_map.draw(screen, camera)
-            self.game_manager.player.draw(screen, camera)
-        else:
-            camera = PositionCamera(0, 0)
-            self.game_manager.current_map.draw(screen, camera)
-        for enemy in self.game_manager.current_enemy_trainers:
-            enemy.draw(screen, camera)
-
-        for bush in self.wild_encounters:
-            bush.draw(screen, camera)
-
-        self.game_manager.bag.draw(screen)
         
+        # 1. Draw Map (Background)
+        self.game_manager.current_map.draw(screen, camera)
+
+        # 2. Collect all renderable entities
+        renderables = []
+
+        # Player
+        if self.game_manager.player:
+            renderables.append(self.game_manager.player)
+        
+        # Enemy Trainers
+        renderables.extend(self.game_manager.current_enemy_trainers)
+        renderables.extend(self.wild_encounters)
+
+        # Online Players
         if self.online_manager and self.game_manager.player:
             list_online = self.online_manager.get_list_players()
-            for player in list_online:
-                if player["map"] == self.game_manager.current_map.path_name:
-                    cam = self.game_manager.player.camera
-                    pos = cam.transform_position_as_position(Position(player["x"], player["y"]))
-                    self.sprite_online.update_pos(pos)
-                    self.sprite_online.draw(screen)
+            for p_data in list_online:
+                if p_data["map"] == self.game_manager.current_map.path_name:
+                    # Create a temporary sorted object wrapper
+                    class OnlinePlayerRenderable:
+                        def __init__(self, data, sprite, cam_ref):
+                            self.data = data
+                            self.sprite = sprite
+                            self.cam_ref = cam_ref
+                            self.position = Position(data["x"], data["y"])
+                            # Sort by Y. 
+                            self.sort_y = self.position.y + GameSettings.TILE_SIZE
+                        
+                        def draw(self, surf, cam):
+                            # Online player draw logic extracted from original loop
+                            pos = cam.transform_position_as_position(self.position)
+                            self.sprite.update_pos(pos)
+                            self.sprite.draw(surf)
 
-        # Draw UI
+                    renderables.append(OnlinePlayerRenderable(p_data, self.sprite_online, camera))
+
+
+        def get_sort_key(entity):
+             # Online players have .sort_y
+            if hasattr(entity, 'sort_y'):
+                return entity.sort_y
+            
+            # Entities usually have a hitbox
+            if hasattr(entity, 'hitbox'):
+                return entity.hitbox.bottom
+            
+            # Fallback to position
+            if hasattr(entity, 'position'):
+                return entity.position.y + GameSettings.TILE_SIZE
+            
+            return 0
+
+        renderables.sort(key=get_sort_key)
+
+        # 4. Draw Sorted Entities
+        for entity in renderables:
+            entity.draw(screen, camera)
+
+        # 5. Draw UI (Always on top)
+        self.game_manager.bag.draw(screen)
         self.ui_manager.draw(screen)

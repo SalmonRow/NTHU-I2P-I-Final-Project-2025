@@ -16,6 +16,12 @@ class InputManager:
         self.mouse_pos: tuple[int, int] = (0, 0)
         self.mouse_wheel: int = 0  # +1 / -1
 
+    def get_mouse_pos(self) -> tuple[int, int]:
+        return self.mouse_pos
+        
+    def get_scroll_y(self) -> int:
+        return self.mouse_wheel
+
     def reset(self) -> None:
         self._pressed_keys.clear()
         self._released_keys.clear()
