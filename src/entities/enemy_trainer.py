@@ -10,7 +10,7 @@ from src.core import GameManager
 from src.core.services import input_manager, scene_manager
 from src.utils import GameSettings, Direction, Position, PositionCamera
 from src.utils.definition import Monster
-from src.interface.components.label import Label
+
 
 
 class EnemyTrainerClassification(Enum):
@@ -29,6 +29,9 @@ class EnemyTrainer(Entity):
     detected: bool
     los_direction: Direction
     monster: Monster | None
+    party: list[Monster] # New: Support full party
+
+    defeated_at: float # Timestamp in ms
 
     @override
     def __init__(
@@ -41,11 +44,22 @@ class EnemyTrainer(Entity):
         max_tiles: int | None = 2,
         facing: Direction | None = None,
         monster: Monster | None = None,
+        party: list[Monster] | None = None, # New Arg
+        defeated_at: float = 0 # New Arg
     ) -> None:
         super().__init__(x, y, game_manager, sprite_path)
         self.classification = classification
         self.max_tiles = max_tiles
-        self.monster = monster
+        self.defeated_at = defeated_at
+        
+        # Priority: Party > Single Monster
+        if party:
+            self.party = party
+            self.monster = party[0] if party else None
+        else:
+            self.monster = monster
+            self.party = [monster] if monster else []
+
         if classification == EnemyTrainerClassification.STATIONARY:
             self._movement = IdleMovement()
             if facing is None:
@@ -56,30 +70,46 @@ class EnemyTrainer(Entity):
         self.warning_sign = Sprite("exclamation.png", (GameSettings.TILE_SIZE // 2, GameSettings.TILE_SIZE // 2))
         self.warning_sign.update_pos(Position(x + GameSettings.TILE_SIZE // 4, y - GameSettings.TILE_SIZE // 2))
         self.detected = False
-        self.press_space = Label(
-            "press SPACE", GameSettings.SCREEN_WIDTH // 2 - 40, GameSettings.SCREEN_HEIGHT - 40
-        )
 
     @override
     def update(self, dt: float) -> None:
         self._movement.update(self, dt)
-        self._has_los_to_player()
-        if self.detected and input_manager.key_pressed(pg.K_SPACE):
+        
+        # Check Cooldown (using real time for persistence)
+        import time
+        current_time = time.time()
+        is_on_cooldown = (current_time - self.defeated_at) < 180.0 # 3 minutes in seconds
+
+        if not is_on_cooldown:
+            self._has_los_to_player()
+        else:
+            self.detected = False # Hide exclamation
+
+        if self.detected and input_manager.key_pressed(pg.K_f):
             self.game_manager.current_battle_en = self
 
-            enemy_mon = self.monster
-            if enemy_mon.get('hp') == 0:
+            if not self.party:
                 return
 
+            # Find first alive one (in the ORIGINAL party, which should always be alive now)
+            first_mon = self.party[0]
+            
             player_mon = self.game_manager.bag.get_first_available_monster()
             
             if not player_mon:
                 return
 
+            # DEEP COPY for battle persistence (so trainer resets on loss/exit)
+            import copy
+            battle_party = copy.deepcopy(self.party)
+            # Find the corresponding first mon in the copied party
+            copied_first_mon = next((m for m in battle_party if m['name'] == first_mon['name']), battle_party[0])
+
             scene_manager.change_scene(
                 'battle',
                 player_monster=player_mon,
-                enemy_monster=enemy_mon,
+                enemy_monster=copied_first_mon,
+                enemy_party=battle_party, # Pass copied Party
                 is_wild_encounter = False
             )
 
@@ -90,7 +120,6 @@ class EnemyTrainer(Entity):
         super().draw(screen, camera)
         if self.detected:
             self.warning_sign.draw(screen, camera)
-            self.press_space.draw(screen)
         if GameSettings.DRAW_HITBOXES:
             los_rect = self._get_los_rect()
             if los_rect is not None:
@@ -130,13 +159,13 @@ class EnemyTrainer(Entity):
         elif self.los_direction == Direction.LEFT:
             return pg.Rect(
                 enx - max_dis, eny,
-                tile_size, max_dis
+                max_dis, tile_size
             )
 
         elif self.los_direction == Direction.RIGHT:
             return pg.Rect(
                 enx + max_dis, eny,
-                tile_size, max_dis
+                max_dis, tile_size
             )
 
         return None
@@ -176,13 +205,31 @@ class EnemyTrainer(Entity):
                 facing = facing_val
         if facing is None and classification == EnemyTrainerClassification.STATIONARY:
             facing = Direction.DOWN
-
-        monster: Monster | None = None
-        monster_data = data.get("monster")    
+            
+        # Party Support logic
+        party = []
+        monster_data = data.get("monster")
+        from src.core.data_loader import DataLoader
+        dl = DataLoader.instance()
+        
         if monster_data:
-            from src.core.data_loader import DataLoader
-            DataLoader.instance().hydrate_monster(monster_data)
-            monster = monster_data
+            if isinstance(monster_data, list):
+                # It's a list (Existing feature in JSON!)
+                for m in monster_data:
+                    dl.hydrate_monster(m)
+                    # AUTO-FIX: If HP is 0, reset to max_hp
+                    if m.get('hp', 0) <= 0:
+                         m['hp'] = m.get('max_hp', 100)
+                    party.append(m)
+            elif isinstance(monster_data, dict):
+                # Single monster (Legacy)
+                dl.hydrate_monster(monster_data)
+                if monster_data.get('hp', 0) <= 0:
+                     monster_data['hp'] = monster_data.get('max_hp', 100)
+                party.append(monster_data)
+
+        # Legacy Monster arg is just party[0]
+        first_monster = party[0] if party else None
 
         return cls(
             data["x"] * GameSettings.TILE_SIZE,
@@ -192,7 +239,9 @@ class EnemyTrainer(Entity):
             classification,
             max_tiles,
             facing,
-            monster,
+            first_monster, # Pass for legacy
+            party, # Pass new party
+            data.get("defeated_at", 0) # Load defeated_at
         )
 
     @override
@@ -201,18 +250,28 @@ class EnemyTrainer(Entity):
         base["classification"] = self.classification.value
         base["facing"] = self.direction.name
         base["max_tiles"] = self.max_tiles
-        if self.monster:
-            clean_mon = {
-                "name": self.monster.get("name"),
-                "level": self.monster.get("level", 1),
-                "hp": self.monster.get("hp", 0),
-                "moves": self.monster.get("moves", [])
-            }
-            if "xp" in self.monster:
-                clean_mon["xp"] = self.monster["xp"]
-            base['monster'] = clean_mon
+        base["defeated_at"] = self.defeated_at # Persist defeated_at
+        
+        if self.party:
+            # Clean all monsters in party (Ensure HP is cleaned/reset if needed? No, deep copy handles it)
+            clean_party = []
+            for m in self.party:
+                clean_mon = {
+                    "name": m.get("name"),
+                    "level": m.get("level", 1),
+                    "hp": m.get("hp", 0),
+                    "moves": m.get("moves", [])
+                }
+                if "xp" in m:
+                    clean_mon["xp"] = m["xp"]
+                clean_party.append(clean_mon)
+            
+            if len(clean_party) == 1:
+                base['monster'] = clean_party[0]
+            else:
+                base['monster'] = clean_party
         else:
-            base['monster'] = None
+             base['monster'] = None
             
         base["sprite"] = self.sprite_path
         return base

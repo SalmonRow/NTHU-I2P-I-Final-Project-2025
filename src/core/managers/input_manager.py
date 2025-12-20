@@ -15,6 +15,8 @@ class InputManager:
         self._released_mouse: set[MouseBtn] = set()
         self.mouse_pos: tuple[int, int] = (0, 0)
         self.mouse_wheel: int = 0  # +1 / -1
+        
+        self.events_of_frame: list[pg.event.Event] = []
 
     def get_mouse_pos(self) -> tuple[int, int]:
         return self.mouse_pos
@@ -28,8 +30,10 @@ class InputManager:
         self._pressed_mouse.clear()
         self._released_mouse.clear()
         self.mouse_wheel = 0
+        self.events_of_frame.clear()
         
     def handle_events(self, e: pg.event.Event) -> None:
+        self.events_of_frame.append(e)
         if e.type == pg.MOUSEMOTION:
             self.mouse_pos = e.pos
         elif e.type == pg.MOUSEBUTTONDOWN:

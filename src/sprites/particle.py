@@ -5,11 +5,11 @@ from src.utils import Position, GameSettings
 WHITE = (255,255,255)
 
 class Particle:
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float, color: tuple = WHITE):
         self.position = Position(x, y)
         self.lifetime = 0.5  # Seconds the particle lasts
         self.size = random.randint(5, 10)
-        self.color = WHITE 
+        self.color = color 
         self.alpha = 255
         
     def update(self, dt: float) -> bool:

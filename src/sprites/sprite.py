@@ -7,10 +7,19 @@ class Sprite:
     image: pg.Surface
     rect: pg.Rect
     
-    def __init__(self, img_path: str, size: tuple[int, int] | None = None):
-        self.image = resource_manager.get_image(img_path)
-        if size is not None:
-            self.image = pg.transform.scale(self.image, size)
+    def __init__(self, img_path: str | None, size: tuple[int, int] | None = None):
+        if img_path:
+            self.image = resource_manager.get_image(img_path)
+            if size is not None:
+                self.image = pg.transform.scale(self.image, size)
+        elif size:
+            self.image = pg.Surface(size, pg.SRCALPHA)
+            self.image.fill((0,0,0,0)) # Transparent
+        else:
+            # Fallback or error?
+            # Creating 1x1 transparent if nothing provided
+            self.image = pg.Surface((1,1), pg.SRCALPHA)
+            
         self.rect = self.image.get_rect()
         
     def update(self, dt: float):

@@ -1,8 +1,10 @@
 import pygame as pg
 from typing import Callable, Optional, Dict
 from src.utils import GameSettings, load_img, Logger
-from src.interface.components import Button, Popup, Label, ItemListComponent, MonsterListComponent
+from src.interface.components import Button, Popup, Label, ItemListComponent, MonsterListComponent, Icon
 from src.interface.components.battle_sprite import BattleSprite
+
+import random
 
 #colors
 GREEN = (0, 200, 0)
@@ -50,10 +52,18 @@ class BattleUIManager:
     POP_OFFSET = (1.6, 1.7)
     ACTION_BUT_PAN = (800, 360)
     LOG_PAN = (600, 270)
+    
+    # Animation Constants
+    ANIM_FAINT = 'faint'
+    ANIM_CATCH = 'catch'
+    ANIM_FAINT = 'faint'
+    ANIM_CATCH = 'catch'
+    ANIM_ENTRY = 'entry'
+    ANIM_CAUGHT_SUCCESS = 'caught_success'
+    ANIM_NONE = 'none'
 
 
     def __init__(self, scene, 
-                 on_attack: Callable, 
                  on_run: Callable, 
                  on_catch: Callable,
                  on_move_click: Callable[[str], None] | None = None): 
@@ -67,6 +77,21 @@ class BattleUIManager:
         self.showing_item_menu = False
         self.showing_pokemon_menu = False # New state
         self.bag_items_page = 0
+        
+        # Animations
+        self.animation_state = self.ANIM_NONE
+        self.anim_timer = 0.0
+        self.anim_counter = 0
+        self.is_animating = False
+        
+        # Load ball sprite dynamically
+        from src.core.data_loader import DataLoader
+        ball_data = DataLoader.instance().get_item_data("Pokeball")
+        ball_path = ball_data.get("sprite_path", "ingame_ui/ball.png")
+        
+        self.ball_sprite = load_img(ball_path)
+        if self.ball_sprite:
+             self.ball_sprite = pg.transform.scale(self.ball_sprite, (40, 40))
 
         
         
@@ -109,10 +134,7 @@ class BattleUIManager:
         self.moves_panel.interactive_components = []
         
         # --- Buttons ---
-        # ghost buttons
-        n_image = load_img("UI/raw/UI_Flat_Button01a_2.png")
-        ghost_img = n_image.copy()
-        ghost_img.fill(GRAY, special_flags=pg.BLEND_RGB_MULT)
+
 
         # Initialize Buttons at (0,0) first, updated in _setup_button_layout
         self.atk_button = Button(
@@ -165,12 +187,6 @@ class BattleUIManager:
                 text="---"
             )
             
-            # --- Capture Surfaces for Ghost Logic (Movies) ---
-            btn.normal_surface = btn.img_button_default.image.copy()
-            btn.hover_surface  = btn.img_button_hover.image.copy()
-
-            btn.ghost_surface = btn.normal_surface.copy()
-            btn.ghost_surface.fill(GRAY, special_flags=pg.BLEND_RGB_MULT)
             
             self.move_buttons.append(btn)
             
@@ -179,6 +195,13 @@ class BattleUIManager:
 
 
         # --- Bag Buttons ---
+        
+        # Initialize Large Background Icons for Split Screen
+        # These are added to interactive_components FIRST so they are drawn BEHIND buttons
+        # Positions will be set in _setup_button_layout
+        self.large_item_icon = Icon("ingame_ui/heal_potion.png", 0, 0, (100, 100)) # Size placeholder
+        self.large_poke_icon = Icon("ingame_ui/pokeball_d.png", 0, 0, (100, 100)) # Size placeholder
+
         self.btn_use_item = Button(
              "UI/raw/UI_Flat_Button01a_2.png", "UI/raw/UI_Flat_Button01a_1.png",
              SCREEN_SIZE[1], 0, 300, 80, 
@@ -213,10 +236,13 @@ class BattleUIManager:
         # Actually components need rects. 
         # We can init it with temp rect and position it later.
         self.item_list_component = ItemListComponent(
-            0, 0, 700, 400, [], on_click=self.on_bag_item_click
+             0, 0, 700, 400, [], on_click=self.on_bag_item_click
         )
 
-        self.bag_menu_panel.interactive_components = [self.btn_use_item, self.btn_change_mon, self.btn_bag_back]
+        self.bag_menu_panel.interactive_components = [
+            self.large_item_icon, self.large_poke_icon, # Add icons first (background) 
+            self.btn_use_item, self.btn_change_mon, self.btn_bag_back
+        ]
         self.item_menu_panel.interactive_components = [self.item_list_component, self.btn_item_back]
         
         self.monster_list_component = MonsterListComponent(
@@ -273,15 +299,83 @@ class BattleUIManager:
         self.item_menu_panel.set_position(self.item_menu_panel.frame_rect.x, self.item_menu_panel.frame_rect.y)
         
         # Bag Menu Buttons
-        bx, by = self.bag_menu_panel.frame_rect.centerx, self.bag_menu_panel.frame_rect.centery
-        self.btn_use_item.hitbox.center = (bx, by - 50)
-        self.btn_change_mon.hitbox.center = (bx, by + 50)
-        self.btn_bag_back.hitbox.topright = (self.bag_menu_panel.frame_rect.right - 20, self.bag_menu_panel.frame_rect.top + 20)
+        # Split Screen Layout: Left Half (Item), Right Half (Pokemon)
+        
+        frame = self.bag_menu_panel.frame_rect
+        half_width = frame.width // 2
+        
+        # Calculate Icon Size (User requested: half panel width * 0.9)
+        # Note: frame.width is likely SCREEN_SIZE since bag_menu_panel size=SCREEN_SIZE
+        # So icons will be huge. 
+        icon_size = int(half_width * 0.9)
+        
+        # Resize Icons (we need to bypass Icon class fixed scale or re-scale)
+        # Icon.__init__ scales image. We can just create new Icon or modify image.
+        # Since Icon class is simple, let's just re-init them here properly or update their image.
+        # But Icon doesn't expose resize method.
+        # Actually Icon.__init__ does resizing.
+        # So we can rebuild them or update rect and image if we can.
+        # Let's easier way: update the existing objects' rect and image.
+        
+        # Helper to resize icon
+        def resize_icon(icon_obj, new_w, new_h):
+             img = load_img(icon_obj.image_path) if hasattr(icon_obj, 'image_path') else icon_obj.image # Icon usually stores image
+             # Wait, Icon implementation:
+             # self.image = resource_manager.get_image(image_path)
+             # self.image = pg.transform.scale(self.image, size)
+             # It acts destructively on self.image.
+             # So we should re-load if we want high quality, or just scale existing if good enough.
+             # Since we want BIG icons, better to reload.
+             # But Icon doesn't store path publicly.
+             
+             # Easier hack: Just recreate them in __init__ with correct size?
+             # But __init__ doesn't know layout size yet (though size=SCREEN_SIZE).
+             # So we know the size. half_width = SCREEN_WIDTH // 2.
+             pass
+        
+        # Let's assume we can just modify the Icon instance or just recreate logic here.
+        # Actually, since we created them in __init__, we can just re-assign them if we didn't add to list yet?
+        # We DID add to list.
+        # So we update their internals.
+        
+        # Correction: I will assume I can just update them using standard Surface transform if I accept quality loss,
+        # OR I use a utility.
+        # Given potential quality loss scaling up small icons, I should reload.
+        from src.core.services import resource_manager
+        
+        # Left Icon (Item)
+        # Center in left half
+        left_center_x = frame.left + half_width // 2
+        center_y = frame.centery
+        
+        # Re-create Left Icon Image
+        # Aspect Ratio? Assume square for simplicity or keep aspect.
+        # User said "blitted as the size of half the panel wdith * 0. 9"
+        # Assuming width = height = half_width * 0.9
+        
+        target_size = (icon_size, icon_size)
+        
+        # Update Left Icon
+        img_item = resource_manager.get_image("ingame_ui/heal_potion.png")
+        self.large_item_icon.image = pg.transform.scale(img_item, target_size)
+        self.large_item_icon.rect = self.large_item_icon.image.get_rect(center=(left_center_x, center_y))
+        
+        # Update Right Icon
+        right_center_x = frame.left + half_width + half_width // 2
+        img_poke = resource_manager.get_image("ingame_ui/pokeball_d.png")
+        self.large_poke_icon.image = pg.transform.scale(img_poke, target_size)
+        self.large_poke_icon.rect = self.large_poke_icon.image.get_rect(center=(right_center_x, center_y))
+        
+        # Position Buttons Over the Icons (Centered)
+        self.btn_use_item.hitbox.center = (left_center_x, center_y)
+        self.btn_change_mon.hitbox.center = (right_center_x, center_y)
+        
+        self.btn_bag_back.set_position(self.bag_menu_panel.frame_rect.right - 20 - 40, self.bag_menu_panel.frame_rect.top + 20)
         
         # Item Menu Buttons (Grid)
         ix = self.item_menu_panel.frame_rect.left + 50
         iy = self.item_menu_panel.frame_rect.top + 50
-        self.btn_item_back.hitbox.topright = (self.item_menu_panel.frame_rect.right - 20, self.item_menu_panel.frame_rect.top + 20)
+        self.btn_item_back.set_position(self.item_menu_panel.frame_rect.right - 20 - 40, self.item_menu_panel.frame_rect.top + 20)
         
         # Position the List Component
         # Padding: 50 from left, 50 from top, 50 from bottom/right roughly
@@ -295,7 +389,7 @@ class BattleUIManager:
         # --- Pokemon Menu Layout ---
         self.pokemon_menu_panel.frame_rect.center = (x // 2, y // 2)
         self.pokemon_menu_panel.set_position(self.pokemon_menu_panel.frame_rect.x, self.pokemon_menu_panel.frame_rect.y)
-        self.btn_pokemon_back.hitbox.topright = (self.pokemon_menu_panel.frame_rect.right - 20, self.pokemon_menu_panel.frame_rect.top + 20)
+        self.btn_pokemon_back.set_position(self.pokemon_menu_panel.frame_rect.right - 20 - 40, self.pokemon_menu_panel.frame_rect.top + 20)
         
         # Use same dimensions as item list for consistency
         self.monster_list_component.rect = pg.Rect(lx, ly, lw, lh)
@@ -318,11 +412,11 @@ class BattleUIManager:
         row_1_y = py + top_padding + 10
         row_2_y = py + top_padding + self.ACTION_BUTTON_SIZE + 20
 
-        # 3. Main Action Buttons
-        self.atk_button.hitbox.topleft = (col_1_x, row_1_y)
-        self.bag_button.hitbox.topleft = (col_2_x, row_1_y)
-        self.run_button.hitbox.topleft = (col_1_x, row_2_y)
-        self.catch_button.hitbox.topleft = (col_2_x, row_2_y)
+        # 3. MainAction Buttons
+        self.atk_button.set_position(col_1_x, row_1_y)
+        self.bag_button.set_position(col_2_x, row_1_y)
+        self.run_button.set_position(col_1_x, row_2_y)
+        self.catch_button.set_position(col_2_x, row_2_y)
 
         # 4. Move Buttons (Use same grid layout)
         for i, btn in enumerate(self.move_buttons):
@@ -330,10 +424,10 @@ class BattleUIManager:
             c = i % 2
             bx = col_1_x if c == 0 else col_2_x
             by = row_1_y if r == 0 else row_2_y
-            btn.hitbox.topleft = (bx, by)
+            btn.set_position(bx, by)
 
         # 5. Back Button (Top Right of Panel)
-        self.back_button.hitbox.topleft = (px + pw - 60, py + 15)
+        self.back_button.set_position(px + pw - 60, py + 15)
         
         # 6. Panel Label (Centered at top)
         self.action_panel_label.rect.centerx = bg_rect.centerx
@@ -506,6 +600,9 @@ class BattleUIManager:
              
              # Reload sprites just in case
              self.load_sprites(self.scene.battle_manager.player_mon, self.scene.battle_manager.enemy_mon)
+             
+             # Trigger Entry Animation
+             self.play_entry_animation(target='player')
         
     def on_bag_item_click(self, item_dict):
         if not self.scene.battle_manager:
@@ -566,6 +663,18 @@ class BattleUIManager:
             self.item_list_component.items = display_items
 
     def load_sprites(self, player_mon: Dict, enem_mon: Dict):
+        # Reset Animation State for new battle
+        self.animation_state = self.ANIM_NONE
+        self.is_animating = False
+        self.anim_timer = 0
+        # Reset Animation State for new battle IF not already animating?
+        # Careful: load_sprites usually happens right before play_entry.
+        # So resetting here is fine.
+        self.animation_state = self.ANIM_NONE
+        self.is_animating = False
+        self.anim_timer = 0
+        self.anim_counter = 0
+
         try:
             # PLAYER: Old Static Logic
             player_full = load_img(player_mon.get("battle_sprite_path", "sprites/pokemon/Bulbasaur.png"))
@@ -587,7 +696,82 @@ class BattleUIManager:
         except Exception as e:
             Logger.error(f"Failed to load sprites in UI Manager: {e}")
 
+    def play_faint_animation(self):
+        self.animation_state = self.ANIM_FAINT
+        self.is_animating = True
+        self.anim_timer = 0
+        self.anim_counter = 0
+
+    def play_catch_animation(self):
+        self.animation_state = self.ANIM_CATCH
+        self.is_animating = True
+        self.anim_timer = 0
+        
+    def play_entry_animation(self, target='both'):
+        """
+        Starts the zoom-in entry animation.
+        target: 'both', 'player', 'enemy'
+        """
+        self.animation_state = self.ANIM_ENTRY
+        self.anim_target = target
+        self.is_animating = True
+        self.anim_timer = 0.0
+
+    def play_catch_success_animation(self):
+        """Starts the stars popping animation for successful catch."""
+        self.animation_state = self.ANIM_CAUGHT_SUCCESS
+        self.is_animating = True
+        self.anim_timer = 0.0
+        
+        # Init simple particles
+        self.particles = []
+        center = self.enem_sprite_rect.center
+        for _ in range(10):
+            self.particles.append({
+                'x': center[0],
+                'y': center[1],
+                'vx': random.uniform(-200, 200),
+                'vy': random.uniform(-200, 0), # Upward pop
+                'life': random.uniform(0.3, 0.6)
+            })
+
     def update(self, dt: float, current_turn: str, is_wild: bool, battle_ended: bool):
+        # Update Animation Timer
+        if self.is_animating:
+            self.anim_timer += dt
+            
+            if self.animation_state == self.ANIM_FAINT:
+                # Flicker White: Toggle every 0.15s, 3 times
+                if self.anim_timer > 0.15:
+                    self.anim_timer = 0
+                    self.anim_counter += 1
+                    
+                if self.anim_counter >= 6:
+                    self.is_animating = False
+                    
+            elif self.animation_state == self.ANIM_CATCH:
+                # Shake logic is time based (1.5s total)
+                if self.anim_timer > 1.5:
+                     self.is_animating = False
+            
+            elif self.animation_state == self.ANIM_ENTRY:
+                # Zoom in over 0.5s
+                if self.anim_timer > 0.5:
+                    self.is_animating = False
+
+            elif self.animation_state == self.ANIM_CAUGHT_SUCCESS:
+                # 0.8s of celebration (Shorter)
+                if self.anim_timer > 0.8:
+                    self.is_animating = False
+                
+                # Update Particles
+                if hasattr(self, 'particles'):
+                     for p in self.particles:
+                         p['x'] += p['vx'] * dt
+                         p['y'] += p['vy'] * dt
+                         p['vy'] += 400 * dt # Gravity
+                         p['life'] -= dt
+
         self.turn_label.set_text(f"Turn: {current_turn.upper()}")
         
         # Handle Popups always if open (to allowing closing even if turn ends?)
@@ -630,6 +814,38 @@ class BattleUIManager:
         if self.enem_sprite:
             self.enem_sprite.update(dt)
 
+        # Handle Special Animations (Faint / Catch)
+        if self.is_animating:
+            self.anim_timer += dt
+            
+            if self.animation_state == self.ANIM_FAINT:
+                # Flicker White: Toggle every 0.15s, 3 times
+                if self.anim_timer > 0.15:
+                    self.anim_timer = 0
+                    self.anim_counter += 1
+                    # Toggle visibility is handled in draw logic by checking counter % 2
+            
+                if self.anim_counter >= 6: # 3 flashes (on/off * 3)
+                    self.is_animating = False
+            
+            elif self.animation_state == self.ANIM_CATCH:
+                # Shake/Tilt: duration 2.0s
+                # Simple logic for now: Just wait
+                if self.anim_timer > 2.0:
+                    self.is_animating = False
+
+    def play_faint_animation(self):
+        self.animation_state = self.ANIM_FAINT
+        self.anim_timer = 0.0
+        self.anim_counter = 0
+        self.is_animating = True
+        
+    def play_catch_animation(self):
+        self.animation_state = self.ANIM_CATCH
+        self.anim_timer = 0.0
+        self.anim_counter = 0
+        self.is_animating = True
+
     def draw(self, screen: pg.Surface, player_mon: Dict, enem_mon: Dict, 
              current_turn: str, is_wild: bool, battle_ended: bool, result_text: str | None):
         
@@ -655,30 +871,23 @@ class BattleUIManager:
                     
                     if i < len(current_moves):
                         # --- ACTIVE MOVE ---
-                        # Restore original colored surfaces
-                        btn.img_button_default.image = btn.normal_surface
-                        btn.img_button_hover.image   = btn.hover_surface
-                        
                         move_name = current_moves[i]
                         btn.text = move_name
+                        btn.disabled = False
                         
                         if btn.button_label:
                             btn.button_label.set_text(move_name)
-                            btn.button_label.rect.center = btn.hitbox.center
                         
                         # Set Callback
                         if self.on_move_click:
                             btn.on_click = lambda m=move_name: self.on_move_click(m)
                     else:
                         # --- EMPTY SLOT (GHOST) ---
-                        # Swap to gray surface for both states
-                        btn.img_button_default.image = btn.ghost_surface
-                        btn.img_button_hover.image   = btn.ghost_surface
-                        
                         btn.text = "---"
+                        btn.disabled = True
+                        
                         if btn.button_label:
                             btn.button_label.set_text("---")
-                            btn.button_label.rect.center = btn.hitbox.center
                             
                         btn.on_click = None # Disable click
 
@@ -689,15 +898,12 @@ class BattleUIManager:
             
                 # Sync labels (positions were set in _setup_button_layout)
                 for btn in [self.atk_button, self.bag_button, self.run_button, self.catch_button]:
-                    if btn.button_label:
-                        btn.button_label.rect.center = btn.hitbox.center
+                    pass
 
                 # Draw Panel (background and buttons)
-                self.battle_bg_pan.draw(screen)
-            
+                self.battle_bg_pan.draw(screen)    
             # Draw Panel Label (position set in _setup_button_layout)
             self.action_panel_label.draw(screen)
-
         # 3. Log Screen
         # Position is set in _setup_button_layout
         self.action_log_screen.draw(screen)
@@ -724,8 +930,6 @@ class BattleUIManager:
             for lbl in line:
                 lbl.draw(screen)
 
-
-
         # 4. Pokemon Status Panels (HP)
         # Positions are set in _setup_button_layout
         self.player_mon_pan.draw(screen)
@@ -733,12 +937,117 @@ class BattleUIManager:
 
         # 5. Sprites
         if self.player_sprite:
-             # Player is a Surface (Static)
-             screen.blit(self.player_sprite, self.player_sprite_rect)
+             should_draw_player = True
+             player_surf = self.player_sprite
+             player_rect = self.player_sprite_rect
+             
+             # Scale Logic for Entry
+             if self.animation_state == self.ANIM_ENTRY and self.anim_target in ['both', 'player']:
+                 scale = min(1.0, self.anim_timer / 0.5)
+                 w, h = player_rect.width, player_rect.height
+                 nw, nh = int(w * scale), int(h * scale)
+                 if nw > 0 and nh > 0:
+                     player_surf = pg.transform.scale(player_surf, (nw, nh))
+                     # Recentering handled by using center of original rect
+                     player_rect = player_surf.get_rect(center=player_rect.center)
+                     
+             screen.blit(player_surf, player_rect)
              
         if self.enem_sprite:
-            # Enemy is a BattleSprite (Animated)
-            self.enem_sprite.draw(screen)
+            # Logic for Faint/Catch visibility
+            should_draw_enemy = True
+            
+            if self.animation_state == self.ANIM_FAINT:
+               # Flicker: Draw if counter is even (0, 2, 4). Hide on odd (1, 3, 5).
+               # If finished (counter >= 6), Keep Hidden!
+               if self.anim_counter >= 6:
+                   should_draw_enemy = False
+               elif self.anim_counter % 2 != 0:
+                   should_draw_enemy = False
+               
+            elif self.animation_state == self.ANIM_CATCH:
+                should_draw_enemy = False
+                
+                # Draw Ball
+                if self.ball_sprite:
+                    # Tilt Logic
+                    angle = 0
+                    # shake every 0.5s
+                    phase = int(self.anim_timer / 0.5) 
+                    if phase == 0: angle = -15 # Left
+                    elif phase == 1: angle = 0  # Center
+                    elif phase == 2: angle = 15 # Right
+                    else: angle = 0
+                    
+                    rotated_ball = pg.transform.rotate(self.ball_sprite, angle)
+                    rect = rotated_ball.get_rect(center=self.enem_sprite_rect.center)
+                    rect.centery += 50 # Lower it a bit to ground level roughly
+                    screen.blit(rotated_ball, rect)
+ 
+            elif self.animation_state == self.ANIM_CAUGHT_SUCCESS or (battle_ended and result_text == 'Caught'):
+                should_draw_enemy = False
+                # Draw Static Ball
+                if self.ball_sprite:
+                    rect = self.ball_sprite.get_rect(center=self.enem_sprite_rect.center)
+                    rect.centery += 50 
+                    screen.blit(self.ball_sprite, rect)
+                
+                # Draw Particles (Only if animating)
+                if self.animation_state == self.ANIM_CAUGHT_SUCCESS and hasattr(self, 'particles'):
+                    # Reuse star image from evolution? or generic
+                    # Use 'ingame_ui/baricon4.png' if available?
+                    # Ideally load once. Lazy load for now.
+                    if not hasattr(self, '_star_img'):
+                        self._star_img = load_img("ingame_ui/baricon4.png")
+                        if self._star_img:
+                            self._star_img = pg.transform.scale(self._star_img, (30, 30))
+                    
+                    if self._star_img:
+                        for p in self.particles:
+                            if p['life'] > 0:
+                                screen.blit(self._star_img, (p['x'], p['y']))
+
+            if should_draw_enemy:
+                # Enemy is a BattleSprite (Animated)
+                if self.animation_state == self.ANIM_FAINT and (self.anim_counter % 2 == 0):
+                     # Draw White Mask idea:
+                     # 1. Draw normal
+                     # 2. Draw white surface with ADD blend?
+                     # Simple: Just draw normal for now, "Flicker" means appear/disappear.
+                     # User asked for "Flicker WHITE".
+                     # To do white: Fill a copy with white, set blend mode.
+                     # Expensive? Let's try simple toggle visibility first (User accepted "Flicker"). 
+                     # Wait, user said "Flicker WHITE".
+                     # Let's try to blit a white mask.
+                    self.enem_sprite.draw(screen)
+                    
+                    # Create white mask on the fly (or cache it)
+                    # For simplicity: just draw a white rect? No, sprite shape.
+                    # Getting the current image from sprite is needed.
+                    # BattleSprite.current_frames[idx]
+                    curr_img = self.enem_sprite.get_current_image()
+                    if curr_img:
+                        mask = pg.mask.from_surface(curr_img)
+                        white_surf = mask.to_surface(setcolor=WHITE, unsetcolor=None)
+                        white_surf.set_alpha(150) # Semi transparent white
+                        screen.blit(white_surf, self.enem_sprite.rect)
+                else:
+                    # Normal Draw
+                    # Scale Logic for Entry (Enemy)
+                     if self.animation_state == self.ANIM_ENTRY and self.anim_target in ['both', 'enemy']:
+                         scale = min(1.0, self.anim_timer / 0.5)
+                         # BattleSprite draw wrappers are complex. 
+                         # We can't easily scale the BattleSprite object itself.
+                         # But we can get the image and draw manual.
+                         curr_img = self.enem_sprite.get_current_image()
+                         if curr_img:
+                             w, h = self.enem_sprite.rect.width, self.enem_sprite.rect.height
+                             nw, nh = int(w * scale), int(h * scale)
+                             if nw > 0 and nh > 0:
+                                 scaled_img = pg.transform.scale(curr_img, (nw, nh))
+                                 screen.blit(scaled_img, scaled_img.get_rect(center=self.enem_sprite.rect.center))
+                     else:
+                        self.enem_sprite.draw(screen)
 
         # 6. HP Bars
         player_panel = self.player_mon_pan.frame_rect
@@ -775,7 +1084,7 @@ class BattleUIManager:
             self.result_label.set_text(f"{result_text.upper()}!")
             self.result_label.draw(screen)
             self.prompt_label.draw(screen)
-        self.turn_label.draw(screen)
+
 
     def _draw_hp_bar(self, screen: pg.Surface, x: int, y: int, current_hp: int, max_hp: int, name: str):
         hp_ratio = current_hp / max_hp if max_hp > 0 else 0

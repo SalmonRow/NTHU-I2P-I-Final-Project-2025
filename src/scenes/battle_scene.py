@@ -30,7 +30,6 @@ class BattleScene(Scene):
         # Initialize UI Manager with callbacks
         self.ui_manager = BattleUIManager(
             self,
-            on_attack=self.on_attack,
             on_run=self.on_run,
             on_catch=self.on_catch,
             on_move_click=self.on_move_selected
@@ -52,6 +51,11 @@ class BattleScene(Scene):
         self.message_delay = 0.8
         self.is_processing_messages = False
         self._end_message_shown = False
+        
+        # Deferred Logic States
+        self.pending_catch_result = None
+        self.waiting_for_catch_anim = False
+        self.waiting_for_faint_anim = False
 
 
     @override
@@ -66,6 +70,21 @@ class BattleScene(Scene):
             
         self._music_played = False
         self._end_message_shown = False
+        
+        # 1. Background Selection based on map
+        bg_path = "backgrounds/background1.png"
+        if self.game_manager:
+            curr_map = self.game_manager.current_map_key
+            if curr_map in ["gym.tmx", "snow.tmx"]:
+                bg_path = "backgrounds/background3.png"
+            elif curr_map in ["water_gym.tmx", "beach.tmx"]:
+                bg_path = "backgrounds/background2.png"
+        
+        self.background = BackgroundSprite(bg_path)
+        
+        # Reset Animation Trigger Flags
+        if hasattr(self, '_faint_anim_triggered'):
+             del self._faint_anim_triggered
 
         # Fallback if monsters are missing (Development safety)
         if not player_monster:
@@ -74,14 +93,24 @@ class BattleScene(Scene):
             enemy_monster = {"name": "Gengar_fake", "hp": 80, "max_hp": 80, "level": 30, "atk": 70, "defense": 15}
 
         # 1. Initialize Logic System
-        self.battle_manager = BattleManager(player_monster, enemy_monster, self.is_wild_encounter)
+        party = self.game_manager.bag.monsters if self.game_manager and self.game_manager.bag else []
+        enemy_party = kwargs.get('enemy_party', None)
+        self.battle_manager = BattleManager(player_monster, enemy_monster, party, enemy_party, self.is_wild_encounter)
         
         # 2. Initialize Visuals
         self.ui_manager.load_sprites(player_monster, enemy_monster)
         
+        # Trigger Entry Animation
+        self.ui_manager.play_entry_animation()
+        
         # 3. Initial Log
         p_name = player_monster['name']
-        self.ui_manager.add_log_message(f"What will \n[CYAN]{p_name}[WHITE] do?")
+        e_name = enemy_monster['name']
+        
+        if self.battle_manager.phase == 'player':
+            self.ui_manager.add_log_message(f"What will \n[CYAN]{p_name}[WHITE] do?")
+        else:
+            self.ui_manager.add_log_message(f"[CYAN]{e_name}[WHITE] is fast!")
 
     @override
     def exit(self):
@@ -92,9 +121,7 @@ class BattleScene(Scene):
         self.game_manager.current_battle_en = None
 
     # --- Callbacks for UI Buttons ---
-    def on_attack(self):
-        # Now just opens the menu
-        pass
+
 
     def on_move_selected(self, move_name: str):
         self.ui_manager.close_attack_menu()
@@ -133,21 +160,71 @@ class BattleScene(Scene):
 
 
     def on_catch(self):
-        if self.battle_manager:
+        if not self.battle_manager:
+            return
+
+        if self.is_wild_encounter:
             if self.game_manager.bag.has_item("Pokeball"):
                 self.game_manager.bag.remove_item("Pokeball")
-                if self.battle_manager.catch(has_item=True):
-                    e_name = self.battle_manager.enemy_mon.get('name', 'Enemy')
-                    self.game_manager.bag.add_monster(self.battle_manager.enemy_mon)
-                    self.queue_message(f"[WHITE]Gotcha! [CYAN]{e_name} \n[WHITE]was caught!")
-                    self._handle_end()
-
+                
+                # Deferred Logic: Determine result NOW, but apply LATER
+                success = self.battle_manager.catch(has_item=True)
+                
+                # Start Animation
+                self.ui_manager.play_catch_animation()
+                self.waiting_for_catch_anim = True
+                self.pending_catch_result = success
             else:
                 self.queue_message("You don't have any \nPOKEBALLS!")
-
-            
             if self.game_manager:
                  self.game_manager.auto_save()
+        else:
+            # Talk No Jutsu (Trainer Battle)
+            res = self.battle_manager.talk_no_jutsu()
+            if res.get('success'):
+                # Win + Copy Pokemon involves adding to bag?
+                # "you win immediately with the copy of that pokemon"
+                new_mon = res.get('monster')
+                if new_mon:
+                    e_name = new_mon.get('name', 'Enemy')
+                    self.game_manager.bag.add_monster(new_mon)
+                    self.queue_message(f"[CYAN]Talk No Jutsu [GREEN]Successful!")
+                    self.queue_message(f"[WHITE]Converted [CYAN]{e_name}[WHITE]!")
+                    self._handle_end()
+            else:
+                reason = res.get('reason', '')
+                if reason == 'cooldown':
+                    turns = self.battle_manager.talk_cooldown
+                    self.queue_message(f"[WHITE]Talk No Jutsu is tired...\nWait [RED]{turns} [WHITE]turns.")
+                else: 
+                    self.queue_message("[WHITE]Talk No Jutsu [RED]Failed!")
+                    self.queue_message("[YELLOW]Prepare for impact!")
+    def _handle_catch_completion(self):
+        """Called when catch animation finishes"""
+        success = self.pending_catch_result
+        
+        if success:
+             # Trigger Success Animation (Stars)
+             self.ui_manager.play_catch_success_animation()
+             
+             self.battle_manager.distribute_catch_xp()
+             e_name = self.battle_manager.enemy_mon.get('name', 'Enemy')
+             self.game_manager.bag.add_monster(self.battle_manager.enemy_mon)
+             self.queue_message(f"[WHITE]Gotcha! [CYAN]{e_name} \n[WHITE]was caught!")
+             
+             if self.battle_manager.has_alive_enemy():
+                 self._handle_next_enemy()
+             else:
+                 # No more enemies -> Caught (End)
+                 self.battle_manager.result = 'Caught'
+                 self.battle_manager.phase = 'ended'
+                 self._handle_end()
+        else:
+             self.queue_message("[WHITE]Broke free!")
+             # Woosh Back In
+             self.ui_manager.play_entry_animation(target='enemy') 
+             
+        pass
 
     def on_bag(self):
         Logger.info("Bag button clicked - Feature not implemented yet")
@@ -162,11 +239,67 @@ class BattleScene(Scene):
         """Helpers to handle end of battle transition logic if needed"""
         pass
 
+    def _handle_next_enemy(self):
+        """Transition to next enemy pokemon"""
+        new_mon = self.battle_manager.next_enemy_pokemon()
+        if new_mon:
+            # Reload Sprites
+            self.ui_manager.load_sprites(self.battle_manager.player_mon, new_mon)
+            # Trigger Entry Animation
+            self.ui_manager.play_entry_animation(target='enemy')
+            
+            # Queue Message
+            e_name = new_mon.get('name', 'Enemy')
+            self.queue_message(f"[CYAN]Enemy [WHITE]sent out \n[CYAN]{e_name}[WHITE]!")
+        pass
+
     @override
     def update(self, dt):
         # ALWAYS Update UI (Animations, Buttons, etc.)
         self.ui_manager.update(dt, self.battle_manager.phase if self.battle_manager else 'wait', self.is_wild_encounter, battle_ended=(self.battle_manager and self.battle_manager.phase == "ended"))
+        
+        # CRITICAL SYNC: If animating, DO NOT process game logic
+        if self.ui_manager.is_animating:
+            return
 
+        # Check for Deferred Catch Completion
+        if self.waiting_for_catch_anim:
+            self.waiting_for_catch_anim = False # Animation just finished
+            self._handle_catch_completion()
+            return
+            
+        # Check for Deferred Faint Completion
+        if self.waiting_for_faint_anim:
+            self.waiting_for_faint_anim = False
+            if self.battle_manager.phase == BattleManager.PHASE_ENEMY_FAINT:
+                self._handle_next_enemy()
+            else:
+                self._handle_end() 
+            return
+
+        # Update Talk Button State
+        if self.battle_manager and not self.is_wild_encounter:
+             self.ui_manager.catch_button.disabled = (self.battle_manager.talk_cooldown > 0)
+        
+        # Check for Faint Animation Trigger (Enemy died this frame?)
+        # We need to detect the moment HP hits 0, BEFORE we set phase to 'ended'
+        # Actually BattleManager sets phase to 'ended' instantly.
+        # So we modify the check: if ended, but not yet handled visual?
+        # A bit tricky. 
+        # Better: Check if Phase is 'ended' AND result is 'Victory' AND visual not handled
+        # Check for Faint Animation Trigger (Enemy died this frame?)
+        # 1. Victory (End of Battle) OR 2. Enemy Faint (Next Pokemon)
+        is_victory = (self.battle_manager.phase == 'ended' and self.battle_manager.result == 'Victory')
+        is_next_enemy = (self.battle_manager.phase == BattleManager.PHASE_ENEMY_FAINT)
+        
+        if self.battle_manager and (is_victory or is_next_enemy):
+             # Hacky check: Use a flag to ensure we only trigger once
+             if not hasattr(self, '_faint_anim_triggered'):
+                 self._faint_anim_triggered = True
+                 self.ui_manager.play_faint_animation()
+                 self.waiting_for_faint_anim = True
+                 return # Wait for anim
+        
         # 0. Handle Message Queue
         if self.is_processing_messages:
             self.message_timer += dt
@@ -201,6 +334,9 @@ class BattleScene(Scene):
                     self.queue_message(f"[CYAN]{self.battle_manager.player_mon['name']} [YELLOW]Won!")
                 elif self.battle_manager.result == BattleManager.ENDING_MESS[1]:
                     self.queue_message(f"[CYAN]{self.battle_manager.player_mon['name']} [RED]Fainted...")
+                elif self.battle_manager.result == 'Caught':
+                    # Already showed Gotcha message, maybe just final status?
+                    self.queue_message(f"[YELLOW]Wild Pokemon Caught!")
                 self._end_message_shown = True
 
             # Play Victory Music (Sync with End Screen)

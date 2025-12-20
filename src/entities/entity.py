@@ -55,6 +55,24 @@ class Entity:
         camera_x = center_x - half_width
         camera_y = center_y - half_height
 
+        # Clamp to map boundaries
+        if hasattr(self, 'game_manager') and self.game_manager.current_map:
+            # Get map dimensions
+            map_surf = self.game_manager.current_map._surface
+            map_w = map_surf.get_width()
+            map_h = map_surf.get_height()
+            screen_w = GameSettings.SCREEN_WIDTH
+            screen_h = GameSettings.SCREEN_HEIGHT
+            
+            # Only clamp if map is larger than screen (otherwise camera stays at 0 or specialized handling later)
+            # Actually, standard clamp works: max(0, min(val, limit))
+            # If map < screen, limit is negative. max(0, negative) is 0. 
+            # This correctly forces camera to 0,0 for small maps (top-left aligned), 
+            # which serves as a good base for the Auto-Zoom logic in GameScene.
+            
+            camera_x = max(0, min(camera_x, map_w - screen_w))
+            camera_y = max(0, min(camera_y, map_h - screen_h))
+
         return PositionCamera(int(camera_x), int(camera_y))
         
     def to_dict(self) -> dict[str, object]:

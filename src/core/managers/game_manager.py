@@ -1,5 +1,6 @@
 from __future__ import annotations
 from src.utils import Logger, GameSettings, Position, Teleport
+from src.core.managers.shop_manager import ShopManager
 import json, os
 import pygame as pg
 from typing import TYPE_CHECKING
@@ -7,13 +8,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.maps.map import Map
     from src.entities.player import Player
+    from src.entities.player import Player
     from src.entities.enemy_trainer import EnemyTrainer
+    from src.entities.shop_keeper import ShopKeeper
     from src.data.bag import Bag
 
 class GameManager:  
     # Entities
     player: Player | None
+    player: Player | None
     enemy_trainers: dict[str, list[EnemyTrainer]]
+    sellers: dict[str, list[ShopKeeper]]
     bag: "Bag"
     
     # Map properties
@@ -33,6 +38,7 @@ class GameManager:
     def __init__(self, maps: dict[str, Map], start_map: str, 
                  player: Player | None,
                  enemy_trainers: dict[str, list[EnemyTrainer]], 
+                 sellers: dict[str, list[ShopKeeper]],
                  bag: Bag | None = None):
                      
         from src.data.bag import Bag
@@ -41,7 +47,9 @@ class GameManager:
         self.current_map_key = start_map
         self.player = player
         self.enemy_trainers = enemy_trainers
+        self.sellers = sellers
         self.bag = bag if bag is not None else Bag([], [])
+        self.shop_manager = ShopManager(self)
         
         self.last_visited_position = {}
         
@@ -50,6 +58,9 @@ class GameManager:
         self.next_map = ""
 
         self.current_battle_en = None
+
+    def update(self, dt: float):
+        self.shop_manager.update(dt)
 
     def get_and_clear_battle_result(self) -> str | None:
         result = self.last_battle_result
@@ -69,6 +80,10 @@ class GameManager:
         return self.enemy_trainers[self.current_map_key]
         
     @property
+    def current_sellers(self) -> list[ShopKeeper]:
+        return self.sellers.get(self.current_map_key, [])
+        
+    @property
     def current_teleporter(self) -> list[Teleport]:
         return self.maps[self.current_map_key].teleporters
     
@@ -78,8 +93,13 @@ class GameManager:
             return
         #added the log of the current position before leaving the map for players
         if self.player:
-            self.last_visited_position[self.current_map_key] = self.player.position.copy()
-            Logger.info(f'Saved exit position for map {self.current_map_key} at ({int(self.player.position.x)}, {int(self.player.position.y)})')
+            # Save position as integers
+            pos = self.player.position
+            self.last_visited_position[self.current_map_key] = Position(int(pos.x), int(pos.y))
+            # Clear navigation path to stop movement
+            if hasattr(self.player, 'path'):
+                self.player.path = []
+            Logger.info(f'Saved exit position for map {self.current_map_key} at ({int(self.player.position.x // GameSettings.TILE_SIZE)}, {int(self.player.position.y // GameSettings.TILE_SIZE)})')
 
         self.next_map = target
         self.should_change_scene = True
@@ -92,9 +112,11 @@ class GameManager:
 
             if self.player: #coming back the to recorded postion 
                 if self.current_map_key in self.last_visited_position:
+                    Logger.info(f"Restoring position for {self.current_map_key}: {self.last_visited_position[self.current_map_key]}")
                     self.player.position = self.last_visited_position[self.current_map_key].copy()
 
                 else: #come back to spawn
+                    Logger.info(f"No saved position for {self.current_map_key}. Using spawn. Keys: {list(self.last_visited_position.keys())}")
                     self.player.position = self.maps[self.current_map_key].spawn.copy()
             
     def check_collision(self, rect: pg.Rect) -> bool:
@@ -102,6 +124,9 @@ class GameManager:
             return True
         for entity in self.enemy_trainers[self.current_map_key]:
             if rect.colliderect(entity.animation.rect):
+                return True
+        for entity in self.sellers.get(self.current_map_key, []):
+            if rect.colliderect(entity.hitbox):
                 return True
         
         return False
@@ -130,6 +155,7 @@ class GameManager:
         for key, m in self.maps.items():
             block = m.to_dict()
             block["enemy_trainers"] = [t.to_dict() for t in self.enemy_trainers.get(key, [])]
+            block["sellers"] = [s.to_dict() for s in self.sellers.get(key, [])]
             # spawn = self.player_spawns.get(key)
             # block["player"] = {
             #     "x": spawn["x"] / GameSettings.TILE_SIZE,
@@ -141,6 +167,10 @@ class GameManager:
             "current_map": self.current_map_key,
             "player": self.player.to_dict() if self.player is not None else None,
             "bag": self.bag.to_dict(),
+            "last_visited_position": {
+                k: {"x": v.x / GameSettings.TILE_SIZE, "y": v.y / GameSettings.TILE_SIZE}
+                for k, v in self.last_visited_position.items()
+            }
         }
 
     @classmethod
@@ -148,6 +178,7 @@ class GameManager:
         from src.maps.map import Map
         from src.entities.player import Player
         from src.entities.enemy_trainer import EnemyTrainer
+        from src.entities.shop_keeper import ShopKeeper
         from src.data.bag import Bag
         
         Logger.info("Loading maps")
@@ -155,6 +186,7 @@ class GameManager:
         maps: dict[str, Map] = {}
         # player_spawns: dict[str, Position] = {}
         trainers: dict[str, list[EnemyTrainer]] = {}
+        sellers: dict[str, list[ShopKeeper]] = {}
 
         for entry in maps_data:
             path = entry["path"]
@@ -170,15 +202,31 @@ class GameManager:
             maps, current_map,
             None, # Player
             trainers,
+            sellers,
             bag=None
         )
         gm.current_map_key = current_map
         
         raw_visited_pos = data.get("last_visited_position", {})
+        for k, v in raw_visited_pos.items():
+            gm.last_visited_position[k] = Position(
+                v["x"] * GameSettings.TILE_SIZE, 
+                v["y"] * GameSettings.TILE_SIZE
+            )
         Logger.info("Loading enemy trainers")
+        from src.entities.gym_leader import GymLeader
         for m in data["map"]:
             raw_data = m["enemy_trainers"]
-            gm.enemy_trainers[m["path"]] = [EnemyTrainer.from_dict(t, gm) for t in raw_data]
+            loaded_trainers = []
+            for t in raw_data:
+                if t.get("is_gym_leader", False):
+                    loaded_trainers.append(GymLeader.from_dict(t, gm))
+                else:
+                    loaded_trainers.append(EnemyTrainer.from_dict(t, gm))
+            gm.enemy_trainers[m["path"]] = loaded_trainers
+            
+            raw_sellers = m.get("sellers", [])
+            gm.sellers[m["path"]] = [ShopKeeper.from_dict(s, gm) for s in raw_sellers]
         
         Logger.info("Loading Player")
         if data.get("player"):
@@ -188,4 +236,4 @@ class GameManager:
         from src.data.bag import Bag as _Bag
         gm.bag = Bag.from_dict(data.get("bag", {})) if data.get("bag") else _Bag([], [])
 
-        return gm
+        return gm 

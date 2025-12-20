@@ -1,9 +1,10 @@
 {
     "Heal Potion": {
         "type": "effect_item",
-        "description": "Restores 50 HP.",
+        "description": "Restores 100 HP.",
         "effect": "heal_hp",
-        "value": 50,
+        "value": 100,
+        "base_cost": 10,
         "usable_in_bag": true,
         "sprite_path": "ingame_ui/heal_potion.png"
     },
@@ -13,6 +14,7 @@
         "effect": "buff_stat",
         "stat": "atk",
         "value": 1.5,
+        "base_cost": 20,
         "usable_in_bag": false,
         "sprite_path": "ingame_ui/power_beer.png"
     },
@@ -22,6 +24,7 @@
         "effect": "buff_stat",
         "stat": "defense",
         "value": 1.5,
+        "base_cost": 20,
         "usable_in_bag": false,
         "sprite_path": "ingame_ui/defense_potion.png"
     },
@@ -30,6 +33,7 @@
         "description": "Level up a Pokemon.",
         "effect": "level_up",
         "value": 1,
+        "base_cost": 100,
         "usable_in_bag": true,
         "sprite_path": "ingame_ui/sweet_stone.png"
     },
@@ -38,6 +42,7 @@
         "description": "Currency used to buy items.",
         "effect": "none",
         "value": 0,
+        "base_cost": 1,
         "usable_in_bag": false,
         "sprite_path": "ingame_ui/coin.png"
     },
@@ -46,7 +51,17 @@
         "description": "Used to catch wild Pokemon.",
         "effect": "capture",
         "value": 0,
+        "base_cost": 50,
         "usable_in_bag": false,
-        "sprite_path": "ingame_ui/ball.png"
+        "sprite_path": "ingame_ui/pokeball_d.png"
+    },
+    "Souls": {
+        "type": "currency",
+        "description": "Get from doing extracting pokemons",
+        "effect": "some",
+        "value": 0,
+        "base_cost": 10000,
+        "usable_in_bag": false,
+        "sprite_path": "ingame_ui/poke_soul.png"
     }
 }

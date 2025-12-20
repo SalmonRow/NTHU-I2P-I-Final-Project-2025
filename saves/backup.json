@@ -4,9 +4,64 @@
       "path": "map.tmx",
       "teleport": [
         {
-          "x": 24,
+          "x": 63,
+          "y": 37,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 63,
+          "y": 37,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 63,
+          "y": 37,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 61,
+          "y": 37,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 64,
+          "y": 36,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 64,
+          "y": 36,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 46,
           "y": 23,
-          "destination": "gym.tmx"
+          "destination": "shop.tmx"
+        },
+        {
+          "x": 15,
+          "y": 1,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 16,
+          "y": 1,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 17,
+          "y": 1,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 18,
+          "y": 1,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 27,
+          "y": 11,
+          "destination": "grass_gym.tmx"
         }
       ],
       "player": {
@@ -54,15 +109,16 @@
       ],
       "enemy_trainers": [
         {
-          "x": 24.0,
-          "y": 29.0,
+          "x": 21.0,
+          "y": 27.0,
           "classification": "stationary",
           "facing": "DOWN",
           "max_tiles": 2,
+          "defeated_at": 0,
           "monster": {
             "name": "Gengar",
             "level": 30,
-            "hp": 9995171,
+            "hp": 9994243,
             "moves": [
               "Lick",
               "Shadow Ball"
@@ -76,6 +132,7 @@
           "classification": "stationary",
           "facing": "UP",
           "max_tiles": 2,
+          "defeated_at": 0,
           "monster": {
             "name": "Greninja",
             "level": 40,
@@ -93,6 +150,7 @@
           "classification": "stationary",
           "facing": "UP",
           "max_tiles": 2,
+          "defeated_at": 0,
           "monster": {
             "name": "Sleepy Pig",
             "level": 70,
@@ -103,7 +161,8 @@
           },
           "sprite": "character/ow3.png"
         }
-      ]
+      ],
+      "sellers": []
     },
     {
       "path": "gym.tmx",
@@ -111,42 +170,334 @@
         {
           "x": 11,
           "y": 14,
-          "destination": "map.tmx"
+          "destination": "snow.tmx"
         },
         {
           "x": 12,
           "y": 14,
-          "destination": "map.tmx"
+          "destination": "snow.tmx"
         },
         {
           "x": 13,
           "y": 14,
-          "destination": "map.tmx"
+          "destination": "snow.tmx"
         }
       ],
       "player": {
         "x": 12,
         "y": 12
       },
-      "enemy_trainers": []
+      "enemy_trainers": [
+        {
+          "x": 12.0,
+          "y": 5.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 3,
+          "defeated_at": 0,
+          "monster": {
+            "name": "Charizard",
+            "level": 45,
+            "hp": 150,
+            "moves": [
+              "Fire Blast",
+              "Ember"
+            ]
+          },
+          "sprite": "character/ow7.png",
+          "gym_reward": "Fire Gem",
+          "is_gym_leader": true
+        }
+      ],
+      "sellers": []
+    },
+    {
+      "path": "grass_gym.tmx",
+      "teleport": [
+        {
+          "x": 6,
+          "y": 12,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 7,
+          "y": 12,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 8,
+          "y": 12,
+          "destination": "map.tmx"
+        }
+      ],
+      "player": {
+        "x": 9,
+        "y": 11
+      },
+      "enemy_trainers": [
+        {
+          "x": 7.0,
+          "y": 5.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 3,
+          "defeated_at": 0,
+          "monster": {
+            "name": "Venusaur",
+            "level": 45,
+            "hp": 127,
+            "moves": [
+              "Solar Beam",
+              "Razor Leaf"
+            ]
+          },
+          "sprite": "character/ow8.png",
+          "gym_reward": "Grass Gem",
+          "is_gym_leader": true
+        }
+      ],
+      "sellers": []
+    },
+    {
+      "path": "shop.tmx",
+      "teleport": [
+        {
+          "x": 6,
+          "y": 14,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 7,
+          "y": 14,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 8,
+          "y": 14,
+          "destination": "map.tmx"
+        }
+      ],
+      "player": {
+        "x": 8,
+        "y": 12
+      },
+      "enemy_trainers": [],
+      "sellers": [
+        {
+          "x": 13.0,
+          "y": 11.0,
+          "facing": "LEFT",
+          "max_tiles": 2,
+          "sprite": "character/ow2.png"
+        }
+      ]
+    },
+    {
+      "path": "snow.tmx",
+      "teleport": [
+        {
+          "x": 35,
+          "y": 23,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 36,
+          "y": 23,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 37,
+          "y": 23,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 38,
+          "y": 23,
+          "destination": "stairs_snow.tmx"
+        },
+        {
+          "x": 4,
+          "y": 16,
+          "destination": "gym.tmx"
+        }
+      ],
+      "player": {
+        "x": 35,
+        "y": 23
+      },
+      "enemy_trainers": [
+        {
+          "x": 35.0,
+          "y": 2.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 3,
+          "defeated_at": 0,
+          "monster": {
+            "name": "Venusaur",
+            "level": 45,
+            "hp": 127,
+            "moves": [
+              "Solar Beam",
+              "Razor Leaf"
+            ]
+          },
+          "sprite": "character/ow3.png"
+        }
+      ],
+      "sellers": []
+    },
+    {
+      "path": "stairs_snow.tmx",
+      "teleport": [
+        {
+          "x": 10,
+          "y": 1,
+          "destination": "snow.tmx"
+        },
+        {
+          "x": 11,
+          "y": 1,
+          "destination": "snow.tmx"
+        },
+        {
+          "x": 12,
+          "y": 1,
+          "destination": "snow.tmx"
+        },
+        {
+          "x": 13,
+          "y": 1,
+          "destination": "snow.tmx"
+        },
+        {
+          "x": 10,
+          "y": 15,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 11,
+          "y": 15,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 12,
+          "y": 15,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 13,
+          "y": 15,
+          "destination": "map.tmx"
+        }
+      ],
+      "player": {
+        "x": 12,
+        "y": 14
+      },
+      "enemy_trainers": [],
+      "sellers": []
+    },
+    {
+      "path": "beach.tmx",
+      "teleport": [
+        {
+          "x": 16,
+          "y": 1,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 17,
+          "y": 1,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 18,
+          "y": 1,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 15,
+          "y": 1,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 53,
+          "y": 35,
+          "destination": "water_gym.tmx"
+        }
+      ],
+      "player": {
+        "x": 17,
+        "y": 2
+      },
+      "enemy_trainers": [],
+      "sellers": []
+    },
+    {
+      "path": "water_gym.tmx",
+      "teleport": [
+        {
+          "x": 7,
+          "y": 10,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 6,
+          "y": 10,
+          "destination": "beach.tmx"
+        },
+        {
+          "x": 8,
+          "y": 10,
+          "destination": "beach.tmx"
+        }
+      ],
+      "player": {
+        "x": 7,
+        "y": 9
+      },
+      "enemy_trainers": [
+        {
+          "x": 7.0,
+          "y": 4.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 3,
+          "defeated_at": 0,
+          "monster": {
+            "name": "Greninja",
+            "level": 45,
+            "hp": 150,
+            "moves": [
+              "Hydro Pump",
+              "Water Gun"
+            ]
+          },
+          "sprite": "character/ow6.png",
+          "gym_reward": "Water Gem",
+          "is_gym_leader": true
+        }
+      ],
+      "sellers": []
     }
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 44.97581536726367,
-    "y": 15.254883117545688
+    "x": 32.0,
+    "y": 23.493709093691884
   },
   "bag": {
     "monsters": [
       {
         "name": "Dragonite",
         "level": 70,
-        "hp": 112,
+        "hp": 207,
         "moves": [
           "Dragon Claw",
           "Outrage"
         ],
-        "xp": 30448
+        "xp": 47001
       },
       {
         "name": "Charmander",
@@ -155,40 +506,76 @@
         "moves": [
           "Ember",
           "Flamethrower"
-        ]
+        ],
+        "xp": 1610
       },
       {
         "name": "Venusaur",
         "level": 32,
-        "hp": 88,
+        "hp": 55,
         "moves": [
           "Vine Whip",
           "Razor Leaf"
         ],
-        "xp": 728
+        "xp": 2338
       },
       {
         "name": "Gengar",
         "level": 28,
-        "hp": 71,
+        "hp": 0,
         "moves": [
           "Lick",
           "Shadow Ball"
         ],
-        "xp": 400
+        "xp": 2010
       },
       {
-        "name": "Froakie",
-        "level": 13,
-        "hp": 71,
+        "name": "Frogadier",
+        "level": 16,
+        "hp": 0,
         "moves": [
           "Lick",
           "Shadow Ball"
         ],
-        "xp": 400
+        "xp": 2010
+      },
+      {
+        "name": "Bulbasaur",
+        "level": 15,
+        "hp": 0,
+        "moves": [
+          "Thunder Shock",
+          "Quick Attack"
+        ],
+        "xp": 760
+      },
+      {
+        "name": "Gengar",
+        "level": 32,
+        "hp": 7,
+        "moves": [
+          "Lick",
+          "Shadow Ball"
+        ]
       }
     ],
     "items": [
+      {
+        "name": "Pokeball",
+        "count": 379
+      },
+      {
+        "name": "Coins",
+        "count": 779
+      },
+      {
+        "name": "Souls",
+        "count": 96
+      },
+      {
+        "name": "Defense Potion",
+        "count": 80
+      },
       {
         "name": "Heal Potion",
         "count": 91
@@ -198,21 +585,39 @@
         "count": 100
       },
       {
-        "name": "Defense Potion",
-        "count": 80
-      },
-      {
-        "name": "Coins",
-        "count": 676
-      },
-      {
-        "name": "Pokeball",
-        "count": 399
-      },
-      {
         "name": "Sweet Stone",
-        "count": 654
+        "count": 647
       }
     ]
+  },
+  "last_visited_position": {
+    "map.tmx": {
+      "x": 26.796875,
+      "y": 11.953125
+    },
+    "shop.tmx": {
+      "x": 7.0,
+      "y": 13.09375
+    },
+    "gym.tmx": {
+      "x": 11.859375,
+      "y": 13.140625
+    },
+    "stairs_snow.tmx": {
+      "x": 11.40625,
+      "y": 14.109375
+    },
+    "snow.tmx": {
+      "x": 36.71875,
+      "y": 22.03125
+    },
+    "grass_gym.tmx": {
+      "x": 7.84375,
+      "y": 11.15625
+    },
+    "beach.tmx": {
+      "x": 14.0625,
+      "y": 1.0
+    }
   }
 }

@@ -9,14 +9,38 @@ class BattleManager:
     phase: str
     result: Optional[str]
 
-    def __init__(self, player_mon: Dict, enemy_mon: Dict, is_wild: bool = False):
+    talk_cooldown: int = 0
+    ignore_def_next_turn: bool = False
+    
+    # New Phase for Multi-Enemy
+    PHASE_ENEMY_FAINT = 'enemy_faint'
+
+    def __init__(self, player_mon: Dict, enemy_mon: Dict, player_party: List[Dict], enemy_party: List[Dict] = None, is_wild: bool = False):
         self.player_mon = player_mon
         self.enemy_mon = enemy_mon
+        self.player_party = player_party
+        self.enemy_party = enemy_party if enemy_party else [enemy_mon]
         self.is_wild = is_wild
+        
+        self.talk_cooldown = 0
+        self.ignore_def_next_turn = False
 
-        self.phase = "player"
+        self.talk_cooldown = 0
+        self.ignore_def_next_turn = False
+
         self.result = None
         self._turn_counter = 0
+        
+        # Speed Check (Turn Order)
+        p_speed = player_mon.get('speed', 10)
+        e_speed = enemy_mon.get('speed', 10)
+        
+        if p_speed >= e_speed:
+            self.phase = "player"
+            Logger.info(f"Player Speed ({p_speed}) >= Enemy ({e_speed}). Player starts.")
+        else:
+            self.phase = "enemy"
+            Logger.info(f"Enemy Speed ({e_speed}) > Player ({p_speed}). Enemy starts.")
 
     def _calculate_dmg(self, attacker: Dict, defender: Dict, move_name: str) -> int:
         from src.core.data_loader import DataLoader
@@ -31,6 +55,12 @@ class BattleManager:
         atk_stat = attacker.get('atk', 10)
         def_stat = defender.get('defense', 10)
         level = attacker.get('level', 5)
+        
+        # Check for Talk No Jutsu Penalty
+        if defender == self.player_mon and self.ignore_def_next_turn:
+            def_stat = 1 # Ignore defense (avoid div by zero)
+            self.ignore_def_next_turn = False
+            Logger.info("Defense was ignored due to failed Talk No Jutsu!")
         
         # 3. Base Damage Formula
         # ((2 * Level / 5 + 2) * Power * A / D) / 50 + 2
@@ -68,7 +98,6 @@ class BattleManager:
         modifier *= random.uniform(0.85, 1.0)
         
         final_dmg = int(base_dmg * modifier)
-        final_dmg = int(base_dmg * modifier)
         
         # Return tuple: (damage, effectiveness_multiplier)
         return max(0, final_dmg), type_effectiveness 
@@ -81,9 +110,6 @@ class BattleManager:
         # Full Gen 6+ Type Chart
         # Key: Attacking Type -> Value: { Defending Type: Multiplier }
         # Omitted types default to 1.0
-        # Full Gen 6+ Type Chart
-        # Key: Attacking Type -> Value: { Defending Type: Multiplier }
-        # Omitted types default to 1.0
         from src.core.data_loader import DataLoader
         chart = DataLoader.instance().get_type_chart()
 
@@ -92,7 +118,7 @@ class BattleManager:
 
         for d_type in def_types:
             # Multiply existing modifier by the new type effectiveness
-            # Default to 1.0 (Neutral) if the pairing isn't in the exception list
+            # Default to 1.0 (Neutral) if the pairing isn't in exception list
             modifier *= move_chart.get(d_type, 1.0)
 
         return modifier
@@ -122,15 +148,80 @@ class BattleManager:
         }
 
         if new_hp <= 0:
-            self.result = self.ENDING_MESS[0] # Victory
-            self.phase = "ended"
-            self._handle_xp_gain() # Extracted XP logic for cleaner code
+            # Multi-Enemy Logic
+            if self.has_alive_enemy():
+                 self.phase = self.PHASE_ENEMY_FAINT
+                 self._handle_xp_gain() # Gain XP for this kill
+            else:
+                 self.result = self.ENDING_MESS[0] # Victory
+                 self.phase = "ended"
+                 self._handle_xp_gain() 
         else:
              # If player just attacked, they can't force switch, it's enemy's turn
              # unless the move caused recoil death (not implemented yet)
              self.phase = "enemy"
             
         return turn_result
+        
+    def talk_no_jutsu(self) -> Dict:
+        """
+        Attempt Talk No Jutsu.
+        Returns dict with success block.
+        """
+        if self.phase != 'player':
+            return {'success': False, 'reason': 'phase'}
+            
+        if self.talk_cooldown > 0:
+            return {'success': False, 'reason': 'cooldown'}
+            
+        # chance = 5 + (PercentageLost * 100), max at 50% HP (so +50)
+        max_hp = self.enemy_mon.get('max_hp', 1)
+        hp = self.enemy_mon.get('hp', 1)
+        
+        missing_ratio = 1.0 - (hp / max(1, max_hp))
+        bonus = min(50, int(missing_ratio * 100))
+        chance = 5 + bonus
+        
+        Logger.info(f"Talk No Jutsu! Chance: {chance}% (Bonus {bonus})")
+        
+        if random.randint(1, 100) <= chance:
+            import copy
+            cloned = copy.deepcopy(self.enemy_mon)
+            cloned['hp'] = cloned['max_hp'] # Full HP
+            
+            
+            # Key Logic Update: The enemy monster is "gone" (converted)
+            # So we must set its HP to 0 so it counts as dead/gone for the enemy team
+            
+            # --- DEBUG LOGGING ---
+            Logger.info("--- TALK NO JUTSU DEBUG ---")
+            for i, mon in enumerate(self.enemy_party):
+                Logger.info(f"Mon {i}: {mon['name']} (ID: {id(mon)}) HP: {mon.get('hp')}")
+            
+            # Correctly remove from party (same fix as catch)
+            if self.enemy_mon in self.enemy_party:
+                self.enemy_party.remove(self.enemy_mon)
+            
+            # If no more enemies, it's a Victory (handled by Scene via result)
+            # If there are more enemies, we need to transition. 
+            # Current scene logic for talk_no_jutsu calls _handle_end() immediately which might be wrong for multi-enemy?
+            # User requirement: "you win immediately with the copy of that pokemon" -> implies immediate win?
+            # Let's stick to immediate win for now as per "Talk No Jutsu" implies ending the conflict?
+            # Or maybe just "converting" one enemy?
+            # For now, let's keep it consistent with "Win immediately" logic observed in previous code comments.
+            
+            self.result = 'Victory' 
+            self.phase = "ended"
+            
+            return {'success': True, 'monster': cloned}
+        else:
+            self.ignore_def_next_turn = True
+            # Cooldown: used (0), 1, 2, 3, 4 (avail). So set to 4.
+            # We decrement at start of player turn.
+            self.talk_cooldown = 4 
+            self.phase = "enemy"
+            Logger.info("Talk No Jutsu Failed!")
+            return {'success': False, 'reason': 'failed'}
 
     def enemy_atk(self) -> Dict:
         if self.phase != 'enemy':
@@ -167,26 +258,37 @@ class BattleManager:
         else:
             self.phase = "player"
             self._turn_counter += 1
+            if self.talk_cooldown > 0:
+                self.talk_cooldown -= 1
             
         return turn_result
     
+    def has_alive_enemy(self) -> bool:
+        if not self.enemy_party:
+            return False
+        for mon in self.enemy_party:
+            if mon.get('hp', 0) > 0:
+                return True
+        return False
+
+    def next_enemy_pokemon(self) -> Dict | None:
+        """Switch to next available enemy pokemon"""
+        for mon in self.enemy_party:
+            if mon.get('hp', 0) > 0:
+                self.enemy_mon = mon
+                self.phase = 'player' # Reset phase to player turn
+                Logger.info(f"Enemy sent out {mon['name']}!")
+                return mon
+        return None
+
     def _has_available_pokemon(self) -> bool:
-        # We need access to the full party (bag). 
-        # But BattleManager only holds current player_mon ref.
-        # This is a design limitation. We need the Game Manager or the List.
-        # We will assume the caller (Scene) handles the "forced_switch" phase 
-        # because the Scene has access to the Game Manager/Bag.
-        # Wait, if we set phase="forced_switch", the Scene can see that and open the menu.
-        # BUT we need to know if we SHOULD force switch or just die.
-        # Pass the bag validation to the Scene?
-        # Ideally BattleManager should know about the party.
-        # For now, let's always propose "forced_switch" if HP <= 0, 
-        # and let the Scene/UI verify if there are valid monsters.
-        # Actually, let's inject a "party_check_callback" or just rely on Scene.
-        # Simple approach: Always set forced_switch, Scene checks availability.
-        # If no mons available, Scene sets Battle Ended.
-        # BETTER: Let's assume Scene checks this.
-        return True # logic defered to Scene or we attach party later
+        if not self.player_party:
+            return False
+            
+        for pokemon in self.player_party:
+            if pokemon.get('hp', 0) > 0:
+                return True
+        return False
 
     def switch_pokemon(self, new_mon: Dict):
         """
@@ -274,10 +376,51 @@ class BattleManager:
                 req_level = evo_data.get('level')
                 target_species = evo_data.get('to')
                 if self.player_mon['level'] >= req_level:
-                    Logger.info(f"What? {self.player_mon['name']} is evolving!")
-                    self.player_mon['name'] = target_species
-                    dl.hydrate_monster(self.player_mon)
-                    Logger.info(f"Evolved into {target_species}!")
+                    Logger.info(f"{self.player_mon['name']} is ready to evolve!")
+                    self.player_mon['can_evolve'] = True
+                    # self.player_mon['name'] = target_species
+                    # dl.hydrate_monster(self.player_mon)
+                    # Logger.info(f"Evolved into {target_species}!")
+
+    def distribute_catch_xp(self):
+        """
+        Distribute XP to ALL party members upon catch.
+        Formula: 50 + ((caught_level * 2) + caught_hp_left) * 10
+        """
+        from src.core.data_loader import DataLoader
+        dl = DataLoader.instance()
+        
+        c_level = self.enemy_mon.get('level', 1)
+        c_hp = self.enemy_mon.get('hp', 0)
+        
+        xp_gain = 50 + ((c_level * 2) + c_hp) * 10
+        
+        Logger.info(f"Catch Success! Team gained {xp_gain} XP!")
+        
+        for mon in self.player_party:
+             # Add XP
+             current_xp = mon.get('xp', 0)
+             current_xp += xp_gain
+             mon['xp'] = current_xp
+             
+             # Check Level Up (Simplified copy of handle_xp_gain logic)
+             current_level = mon.get('level', 1)
+             threshold = dl.get_xp_requirement(current_level)
+             
+             while current_xp >= threshold:
+                 mon['level'] += 1
+                 mon['xp'] = current_xp - threshold
+                 current_xp = mon['xp'] # Update for next loop if multiple levels
+                 
+                 Logger.info(f"{mon.get('name')} leveled up to {mon['level']}!")
+                 
+                 # Re-calc stats
+                 dl.hydrate_monster(mon)
+                 mon['hp'] = mon['max_hp'] # Full heal on level up?
+                 
+                 # Note: Learnset/Evolution logic for non-active mons 
+                 # is complex (Needs UI prompts). Skipping for now to avoid blocking.
+                 threshold = dl.get_xp_requirement(mon['level'])
 
     def use_item(self, item_data: Dict) -> bool:
         """
@@ -357,6 +500,10 @@ class BattleManager:
         
         if success:
             Logger.info("Caught the monster!")
+            # Remove from active enemy party so it doesn't get picked again or count as alive
+            if self.enemy_mon in self.enemy_party:
+                self.enemy_party.remove(self.enemy_mon)
+            
             self.result = self.ENDING_MESS[3] # Caught
             self.phase = "ended"
             return True

@@ -26,35 +26,45 @@ class MenuScene(Scene):
     current_overlay: str | None
     
     BACK_BUTTON_SIZE = 100
+    PLAY_BUTTON_SIZE = 90
     CORNER_OFFSET = 15
+    TITLE = "BROKEN-MON"
     def __init__(self):
         super().__init__()
         self.background = BackgroundSprite("backgrounds/background4.png")
         # Load your asset here. Change "backgrounds/menu_art.png" to your file.
         # If you want to resize it, pass a tuple size=(width, height) as the second argument.
-        self.title_bg = Sprite("UI/raw/UI_Flat_Banner02a.png", size=(760,198)) 
+        self.title_bg = Sprite("UI/raw/UI_Flat_Banner02a.png", size=(820,198)) 
         self.title_bg.rect.center = (GameSettings.SCREEN_WIDTH // 2, GameSettings.SCREEN_HEIGHT // 2 - 15 )
 
-        px, py = GameSettings.SCREEN_WIDTH // 2, GameSettings.SCREEN_HEIGHT * 3 // 4
+        px, py = GameSettings.SCREEN_WIDTH // 2, GameSettings.SCREEN_HEIGHT * 2 // 3
         self.play_button = Button(
-            "UI/button_play.png", "UI/button_play_hover.png",
-            px + 50, py, 100, 100,
-            on_click=lambda: scene_manager.change_scene("game")
+            "UI/cooked/Button_long_1.png", "UI/cooked/Button_long_1hov.png",
+            px - self.PLAY_BUTTON_SIZE * 1.5, py, self.PLAY_BUTTON_SIZE * 3, self.PLAY_BUTTON_SIZE, text="Play", fontsize= 35,
+            on_click=lambda: scene_manager.change_scene("game"),
+            icon_path="UI/cooked/play_icon.png",
+            icon_hover_path="UI/cooked/play_icon.png",
+            icon_size=(50, 50),
+            margin=30
         )
         
         self.settings_button = Button(
-            "UI/button_setting.png", "UI/button_setting_hover.png",
-            px - 100, py, 100, 100,
-            on_click=lambda: self.toggle_overlay("setting")
+            "UI/cooked/Button_long_1.png", "UI/cooked/Button_long_1hov.png",
+            px - self.PLAY_BUTTON_SIZE * 1.5, py + self.PLAY_BUTTON_SIZE + 15, self.PLAY_BUTTON_SIZE * 3, self.PLAY_BUTTON_SIZE, text="Setting", fontsize= 35,
+            on_click=lambda: self.toggle_overlay("setting"),
+            icon_path="UI/cooked/cog_icon_1.png",
+            icon_hover_path="UI/cooked/cog_icon_1.png",
+            icon_size=(50, 50),
+            margin=30
         )
-        self.title = Label(text=f"BROKENMON", x=GameSettings.SCREEN_WIDTH // 2 + 3, y=GameSettings.SCREEN_HEIGHT // 2 - 50,
+        self.title = Label(text=self.TITLE, x=GameSettings.SCREEN_WIDTH // 2 + 3, y=GameSettings.SCREEN_HEIGHT // 2 - 50,
                            color=(16, 106, 255),align='center',fontsize=112, fontfam=2)
-        self.title_outline = Label(text=f"BROKENMON",
+        self.title_outline = Label(text=self.TITLE,
                                     x=GameSettings.SCREEN_WIDTH // 2,
                                     y=GameSettings.SCREEN_HEIGHT // 2 - 50,
                            color=(2, 20, 49),align='center',fontsize=112, fontfam=2)
 
-        self.title_shad = Label(text=f"BROKENMON", x=GameSettings.SCREEN_WIDTH // 2 + 3,
+        self.title_shad = Label(text=self.TITLE, x=GameSettings.SCREEN_WIDTH // 2 + 3,
                                 y=GameSettings.SCREEN_HEIGHT // 2 - 40,
                            color=(7, 52, 126), align='center',fontsize=112, fontfam=2)
         
@@ -140,6 +150,7 @@ class MenuScene(Scene):
     @override
     def exit(self) -> None:
         sound_manager.stop_all_sounds() #stop musics for now, idk bruh
+        self.toggle_overlay(None)
         pass
     @override
     def update(self, dt: float) -> None:

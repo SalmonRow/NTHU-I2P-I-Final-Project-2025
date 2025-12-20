@@ -22,7 +22,8 @@ class Map:
         self.tmxdata = load_tmx(path)
         self.spawn = spawn
         self.teleporters = tp
-        self._raw_data = raw_data or {}  # ← Store it
+        self._raw_data = raw_data or {}
+        self.nav_points = []
 
         pixel_w = self.tmxdata.width * GameSettings.TILE_SIZE
         pixel_h = self.tmxdata.height * GameSettings.TILE_SIZE
@@ -33,6 +34,7 @@ class Map:
         # Prebake the collision map
         self._collision_map = self._create_collision_map()
         self._bushmap = self._create_bushmap()
+        self._water_map = self._create_water_map()
 
     def update(self, dt: float):
         return
@@ -49,7 +51,7 @@ class Map:
                 pg.draw.rect(screen, (0, 255, 0), camera.transform_rect(rect), 1)
 
         
-    def check_collision(self, rect: pg.Rect) -> bool:
+    def check_collision(self, rect: pg.Rect, include_water: bool = True) -> bool:
         '''
         [TODO HACKATHON 4]
         Return True if collide if rect param collide with self._collision_map
@@ -58,6 +60,12 @@ class Map:
         for coli_rect in self._collision_map:
             if rect.colliderect(coli_rect):
                 return True
+        
+        # Check water collision if requested
+        if include_water:
+            for water_rect in self._water_map:
+                if rect.colliderect(water_rect):
+                    return True
         return False
         
     def check_teleport(self, pos: Position) -> Teleport | None:
@@ -100,7 +108,8 @@ class Map:
     def _create_collision_map(self) -> list[pg.Rect]:
         rects = []
         for layer in self.tmxdata.visible_layers:
-            if isinstance(layer, pytmx.TiledTileLayer) and ("collision" in layer.name.lower() or "house" in layer.name.lower()):
+            # Exclude water layers - they are handled separately in _water_map
+            if isinstance(layer, pytmx.TiledTileLayer) and (("collision" in layer.name.lower() or "house" in layer.name.lower()) and "water" not in layer.name.lower()):
                 for x, y, gid in layer:
                     if gid != 0:
                         rects.append(pg.Rect(
@@ -122,6 +131,26 @@ class Map:
                             GameSettings.TILE_SIZE, GameSettings.TILE_SIZE
                         ))
         return rects
+    
+    def _create_water_map(self) -> list[pg.Rect]:
+        rects = []
+        for layer in self.tmxdata.visible_layers:
+            if isinstance(layer, pytmx.TiledTileLayer) and "water" in layer.name.lower():
+                for x, y, gid in layer:
+                    if gid != 0:
+                        rects.append(pg.Rect(
+                            x * GameSettings.TILE_SIZE,
+                            y * GameSettings.TILE_SIZE,
+                            GameSettings.TILE_SIZE, GameSettings.TILE_SIZE
+                        ))
+        return rects
+    
+    def is_water_tile(self, rect: pg.Rect) -> bool:
+        """Check if the given rect is on a water tile."""
+        for water_rect in self._water_map:
+            if rect.colliderect(water_rect):
+                return True
+        return False
 
     @classmethod
     def from_dict(cls, data: dict) -> "Map":
@@ -132,7 +161,10 @@ class Map:
             for mon in data["wild_mon"]:
                 DataLoader.instance().hydrate_monster(mon)
                 
-        return cls(data["path"], tp, pos, data)
+        instance = cls(data["path"], tp, pos, data)
+        if "nav_points" in data:
+            instance.nav_points = data["nav_points"]
+        return instance
 
     def to_dict(self):
         result = {

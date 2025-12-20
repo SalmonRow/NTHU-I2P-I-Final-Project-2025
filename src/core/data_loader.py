@@ -134,3 +134,38 @@ class DataLoader:
         if 'moves' not in monster_data:
             # Fallback for now
             monster_data['moves'] = ["Tackle"]
+            
+        # Check Evolution Status
+        species_data = self.get_monster_species_data(name)
+        evo_data = species_data.get('evolution')
+        monster_data['can_evolve'] = False
+        
+        if evo_data and isinstance(evo_data, dict):
+            req_level = evo_data.get('level')
+            if req_level and level >= req_level:
+                monster_data['can_evolve'] = True
+
+    def create_wild_monster(self, name: str, level: int) -> Dict[str, Any]:
+        """
+        Creates a new wild monster dictionary dynamically.
+        """
+        # Get base species data to verify it exists
+        species = self.get_monster_species_data(name)
+        if not species:
+            Logger.error(f"Cannot create wild monster: {name} not found.")
+            return {}
+            
+        # Create minimal dict
+        monster_data = {
+            "name": name,
+            "level": level,
+            "current_xp": 0
+        }
+        
+        # Hydrate will fill in the stats (HP, ATK, etc.) based on level
+        self.hydrate_monster(monster_data)
+        
+        # Ensure full HP for wild encounter
+        monster_data['hp'] = monster_data['max_hp']
+        
+        return monster_data

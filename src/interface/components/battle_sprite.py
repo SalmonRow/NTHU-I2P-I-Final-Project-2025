@@ -24,7 +24,7 @@ class BattleSprite:
             
         self.current_frames = self.idle_frames
         self.frame_idx = 0.0
-        self.anim_speed = 2.0 # frames per second (Slower bob)
+        self.anim_speed = 1.5 # frames per second (Slower bob)
         self.loop = True
         
         # Position
@@ -136,3 +136,11 @@ class BattleSprite:
              
         img = self.current_frames[idx]
         screen.blit(img, self.rect)
+
+    def get_current_image(self) -> pg.Surface | None:
+        if not self.current_frames:
+            return None
+        idx = int(self.frame_idx)
+        if idx >= len(self.current_frames):
+             idx = len(self.current_frames) - 1
+        return self.current_frames[idx]

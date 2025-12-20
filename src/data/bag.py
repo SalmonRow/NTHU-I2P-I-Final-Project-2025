@@ -8,10 +8,12 @@ from src.utils import Logger
 class Bag:
     _monsters_data: list[Monster]
     _items_data: list[Item]
+    coins: int
 
-    def __init__(self, monsters_data: list[Monster] | None = None, items_data: list[Item] | None = None):
+    def __init__(self, monsters_data: list[Monster] | None = None, items_data: list[Item] | None = None, coins: int = 0):
         self._monsters_data = monsters_data if monsters_data else []
         self._items_data = items_data if items_data else []
+        self.coins = coins
 
     @property
     def monsters(self) -> list[Monster]:
@@ -49,7 +51,8 @@ class Bag:
 
         return {
             "monsters": clean_monsters,
-            "items": clean_items
+            "items": clean_items,
+            "coins": self.coins
         }
     def get_item(self, item_name: str) -> dict | None:
         """Helper to find an item dictionary by name (case-insensitive)."""
@@ -73,9 +76,33 @@ class Bag:
         Logger.warning(f"Failed to remove {count} x {item_name}. Item not found or count too low.")
         return False
         
+    def add_item(self, item_name: str, count: int = 1):
+        item = self.get_item(item_name)
+        if item:
+            item['count'] = item.get('count', 0) + count
+        else:
+            # Need to fetch item data to ensure correct structure
+            from src.core.data_loader import DataLoader
+            static_data = DataLoader.instance().get_item_data(item_name)
+            new_item = {
+                "name": item_name,
+                "count": count
+            }
+            if static_data and 'sprite_path' in static_data:
+                new_item['sprite_path'] = static_data['sprite_path']
+            self._items_data.append(new_item)
+        Logger.info(f"Added {count} x {item_name} to bag.")
+
     def add_monster(self, monster_data: dict):
         self._monsters_data.append(monster_data)
         Logger.info(f"Monster {monster_data.get('name', 'Unknown')} added to bag.")
+
+    def remove_monster(self, monster_data: dict) -> bool:
+        if monster_data in self._monsters_data:
+            self._monsters_data.remove(monster_data)
+            Logger.info(f"Monster {monster_data.get('name', 'Unknown')} removed from bag.")
+            return True
+        return False
 
     def get_first_available_monster(self) -> dict | None:
         """Returns the first monster with HP > 0, or None if all are dead."""
@@ -100,7 +127,7 @@ class Bag:
             if static_data and 'sprite_path' in static_data:
                 item['sprite_path'] = static_data['sprite_path']
 
-        bag = cls(monsters, items)
+        bag = cls(monsters, items, coins=data.get("coins", 0))
         return bag
 
     def sort_items(self):
@@ -118,3 +145,14 @@ class Bag:
 
         self._items_data.sort(key=get_sort_key)
         Logger.info("Bag items sorted by type.")
+
+    def add_coins(self, amount: int):
+        self.coins += amount
+        Logger.info(f"Added {amount} coins. Total: {self.coins}")
+
+    def remove_coins(self, amount: int) -> bool:
+        if self.coins >= amount:
+            self.coins -= amount
+            Logger.info(f"Removed {amount} coins. Remaining: {self.coins}")
+            return True
+        return False

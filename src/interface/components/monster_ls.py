@@ -21,8 +21,11 @@ class MonsterListComponent:
     HOVER_BORDER_WIDTH = 7
 
     def __init__(self, x: int, y: int, width: int, height: int, monster_list: List[Monster], on_click=None):
-        self.rect = pg.Rect(x, y, width, height)
-        self.monsters = monster_list
+        self.rect = pg.Rect(x, y, width, height - 11)
+        # Create a copy and Sort: Evolvable first, then Name
+        self.monsters = list(monster_list) if monster_list else []
+        self.monsters.sort(key=lambda m: (not m.get('can_evolve', False), m.get('name', '')))
+
         self.line_height = 80
         self.monster_image = {}
         self.scroll_offset = 0
@@ -33,6 +36,12 @@ class MonsterListComponent:
         # Scale panel to fit the component width (minus some padding if desired, or full width)
         # 10px padding on each side? Just full width for now inside the scroll area.
         self._panel_surface = self._load_and_scale(self.PANEL_PATH, (self.rect.width, self.line_height - 5))
+
+    def set_monsters(self, monster_list: List[Monster]):
+        """Updates the list of monsters and re-sorts them."""
+        self.monsters = list(monster_list) if monster_list else []
+        self.monsters.sort(key=lambda m: (not m.get('can_evolve', False), m.get('name', '')))
+
 
     def _load_and_scale(self, path: str, size: tuple[int,int]):
         img = resource_manager.get_image(path)
@@ -91,68 +100,79 @@ class MonsterListComponent:
             self.hovered_index = -1
 
     def draw(self, screen: pg.Surface):
-        # Save current clip logic
-        original_clip = screen.get_clip()
+        # Use subsurface for strict clipping
+        # This creates a virtual surface that is mapped to the scroll area
+        # All drawing on 'sub_screen' uses coordinates relative to self.rect.topleft (0,0)
+        sub_screen = screen.subsurface(self.rect)
         
-        # Set clip to our rect
-        screen.set_clip(self.rect)
-        
-        try:
-            y_pos = self.rect.top + 5 + self.scroll_offset
-    
-            TEXT_COLOR = (5, 5, 5)
-            SPRITE_OFFSET_X = 10
-            TEXT_OFFSET_X = self.SPRITE_SIZE + SPRITE_OFFSET_X + 5
-    
-            for i, monster in enumerate(self.monsters):
-                # Optimization: Don't draw if completely out of view
-                # Standard line height is 80
-                if y_pos > self.rect.bottom:
-                    break
-                
-                if y_pos + self.line_height < self.rect.top:
-                    y_pos += self.line_height
-                    continue
-                    
-                # Draw Selection/Hover Background
-    
-                #a background / panels for each monsers
-                screen.blit(self._panel_surface, (self.rect.left, y_pos))
-                if i == self.hovered_index:
-                    highlight_rect = pg.Rect(self.rect.left, y_pos, self.rect.width, self.line_height)
-                    pg.draw.rect(screen, self.HOVER_BORDER_COLOR, highlight_rect, self.HOVER_BORDER_WIDTH)
-    
-                #the monsters
-                sprite = self._get_monster_sprites(monster.get('menu_sprite_path', 'menu_sprites/menusprite1.png'))
-                sprite_x = self.rect.left + SPRITE_OFFSET_X
-                sprite_y = y_pos + (self.line_height - sprite.get_height()) // 2 - 10
-                screen.blit(sprite, (sprite_x, sprite_y))
-    
-                #texts
-                name_text = f"Lv.{monster['level']} {monster['name']}"
-                name_label = Label(
-                    name_text,
-                    x=self.rect.left + TEXT_OFFSET_X,
-                    y=y_pos + 10, 
-                    color=TEXT_COLOR
-                )
-                name_label.draw(screen)
-    
-                hp_text = f"HP: {monster['hp']} / {monster['max_hp']}"
-                hp_label = Label(
-                    hp_text,
-                    x=self.rect.left + TEXT_OFFSET_X,
-                    y=y_pos + self.line_height // 2,
-                    color=TEXT_COLOR,
-                    fontsize=18
-                )
-                hp_label.draw(screen)
-    
+        y_pos = 5 + self.scroll_offset # Relative Y start
+
+        TEXT_COLOR = (5, 5, 5)
+        SPRITE_OFFSET_X = 10
+        TEXT_OFFSET_X = self.SPRITE_SIZE + SPRITE_OFFSET_X + 5
+
+        for i, monster in enumerate(self.monsters):
+            # Check relative bounds
+            if y_pos > self.rect.height:
+                break
+            
+            if y_pos + self.line_height < 0:
                 y_pos += self.line_height
+                continue
                 
-        finally:
-            # Always restore clip even if error
-            screen.set_clip(original_clip)
+            # Draw Selection/Hover Background
+            # Relative 0,0
+            sub_screen.blit(self._panel_surface, (0, y_pos))
+            
+            highlight_rect = pg.Rect(0, y_pos, self.rect.width, self.line_height)
+            
+            # Evolution Border (Green) - Permanent if can evolve
+            if monster.get('can_evolve'):
+                 pg.draw.rect(sub_screen, (0, 255, 0), highlight_rect, self.HOVER_BORDER_WIDTH)
+            # Hover Border (White) - If hovered (and not evolvable? or overlay?)
+            elif i == self.hovered_index:
+                pg.draw.rect(sub_screen, self.HOVER_BORDER_COLOR, highlight_rect, self.HOVER_BORDER_WIDTH)
+
+            #the monsters
+            sprite = self._get_monster_sprites(monster.get('menu_sprite_path', 'menu_sprites/menusprite1.png'))
+            sprite_x = SPRITE_OFFSET_X # Relative X
+            sprite_y = y_pos + (self.line_height - sprite.get_height()) // 2 - 10
+            sub_screen.blit(sprite, (sprite_x, sprite_y))
+
+            #texts
+            # Note: Label expects x,y to position its internal rect. 
+            # We must pass RELATIVE coordinates here.
+            name_text = f"Lv.{monster['level']} {monster['name']}"
+            name_label = Label(
+                name_text,
+                x=TEXT_OFFSET_X, 
+                y=y_pos + 10, 
+                color=TEXT_COLOR
+            )
+            name_label.draw(sub_screen)
+
+            hp_text = f"HP: {monster['hp']} / {monster['max_hp']}"
+            hp_label = Label(
+                hp_text,
+                x=TEXT_OFFSET_X,
+                y=y_pos + self.line_height // 2,
+                color=TEXT_COLOR,
+                fontsize=18
+            )
+            hp_label.draw(sub_screen)
+
+            # Evolution Indicator
+            if monster.get('can_evolve'):
+                 evo_label = Label(
+                     "Evo !", 
+                     x=5, # Relative X
+                     y=y_pos + 5,
+                     color=(0, 255, 0), # Green
+                     fontsize=16
+                 )
+                 evo_label.draw(sub_screen)
+
+            y_pos += self.line_height
 
 
 

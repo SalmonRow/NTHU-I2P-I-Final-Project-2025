@@ -31,6 +31,10 @@ class BushEncounter(Entity):
     ) -> None:
         super().__init__(x,y, game_manager, "character/ow1.png") # TODO: Add bush sprite? 
 
+        # monster_pool is now just a list of strings (names) or Dicts with name
+        # If it's a list of dicts from JSON, extract names?
+        # User said "json would now only have a list of names"
+        # So we assume monster_pool is a list of strings.
         self.monster_pool = monster_pool
         # Set up warning sign
         self.warning_sign = Sprite("exclamation.png", (GameSettings.TILE_SIZE // 2, GameSettings.TILE_SIZE // 2))
@@ -45,7 +49,7 @@ class BushEncounter(Entity):
         Logger.info(f"BushEncounter created at ({x}, {y})")
         Logger.info(f"self.position exists: {hasattr(self, 'position')}")
         if hasattr(self, 'position'):
-            Logger.info(f"self.position value: ({self.position.x}, {self.position.y})")
+            Logger.info(f"self.position value: ({self.position.x // 64}, {self.position.y // 64})")
         
 
         self.hitbox = pg.Rect(x, y, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE)
@@ -86,12 +90,12 @@ class BushEncounter(Entity):
             ENCOUNTER_CHANCE = 0.15 
             
             if random.random() < ENCOUNTER_CHANCE:
-                Logger.info("Wild Encounter Found! Press SPACE to fight.")
+                Logger.info("Wild Encounter Found! Press F to fight.")
                 self.encounter_pending = True
         
         # If encounter is valid/pending, check for interaction to START logic
         if self.encounter_pending:
-            if input_manager.key_pressed(pg.K_SPACE):
+            if input_manager.key_pressed(pg.K_f):
                 if scene_manager._next_scene is not None:
                     return
 
@@ -100,15 +104,33 @@ class BushEncounter(Entity):
                 
                 dl = DataLoader.instance()
                 
-                # Pick random monster
-                raw_mon_data = random.choice(self.monster_pool)
+                # Calculate Dynamic Level
+                party = self.game_manager.bag.monsters
+                if not party: 
+                     player_max = 5
+                else:
+                    player_max = max(m.get('level', 1) for m in party)
                 
-                # Deep copy to safe hydration
-                wild_mon_data = copy.deepcopy(raw_mon_data)
+                min_lvl = max(5, player_max - 5)
+                max_lvl = player_max + 5
+                wild_level = random.randint(min_lvl, max_lvl)
                 
-                # Hydrate! (Calculates stats, assigns sprite paths)
-                dl.hydrate_monster(wild_mon_data)
+                # Pick random monster name
+                # Handle if monster_pool is list of strings or dicts (legacy support)
+                raw = random.choice(self.monster_pool)
+                if isinstance(raw, dict):
+                    mon_name = raw.get('name')
+                else:
+                    mon_name = raw
+                    
+                # Create Wild Monster
+                wild_mon_data = dl.create_wild_monster(mon_name, wild_level)
                 
+                if not wild_mon_data:
+                    Logger.error("Failed to generate wild monster data.")
+                    self.encounter_pending = False
+                    return
+
                 self.game_manager.current_battle_en = self
                 
                 player_mon = self.game_manager.bag.get_first_available_monster()

@@ -58,7 +58,7 @@ class SettingScene(Scene):
             width=slider_width, height=slider_height,
             min_val=0.0, max_val=100.0,
             initial_val=sound_manager.get_volume() * 100,
-            val_change=lambda v: sound_manager.set_volume(v/100),
+            val_change=self.on_volume_change,
             bar_path="UI/raw/UI_Flat_Bar05a.png",
             handle_path="UI/raw/UI_Flat_Button01a_3.png",
             label= "Master Volume"
@@ -105,10 +105,40 @@ class SettingScene(Scene):
     def toggle_mute(self, is_muted: bool) -> None:
         if is_muted:
             self._last_volume = sound_manager.get_volume()
+            # If current volume is already 0, we might want to default last_volume to 0.5 (50%)
+            # so that unmute actually does something if they muted while at 0 volume?
+            # But normally if you mute at 0, you expect 0 when unmuting. 
+            # Let's handle the case where they mute, then unmute.
+            if self._last_volume == 0:
+                self._last_volume = 0.5 # Default restore to 50% if currently 0
+
             sound_manager.set_volume(0.0) 
+            
+            # Sync Slider
+            if hasattr(self, 'volume_slider'):
+                self.volume_slider.value = 0.0
+                self.volume_slider._update_handle_pos()
         else:
             restore_volume = getattr(self, '_last_volume', 0.5)
-            sound_manager.set_volume(restore_volume) #
+            sound_manager.set_volume(restore_volume)
+            
+            # Sync Slider
+            if hasattr(self, 'volume_slider'):
+                self.volume_slider.value = restore_volume * 100
+                self.volume_slider._update_handle_pos()
+
+    def on_volume_change(self, value: float) -> None:
+        normalized = value / 100.0
+        sound_manager.set_volume(normalized)
+        
+        if hasattr(self, 'mute_check'):
+            # If slider moved up from 0, unmute
+            if normalized > 0 and self.mute_check.is_checked:
+                self.mute_check.is_checked = False
+            
+            # If slider moved to 0, mute
+            elif normalized == 0 and not self.mute_check.is_checked:
+                self.mute_check.is_checked = True
 
     @override
     def handle(self, event):
@@ -122,6 +152,7 @@ class SettingScene(Scene):
     @override
     def exit(self) -> None:
         sound_manager.stop_all_sounds() #stop musics for now, idk bruh
+        self.toggle_overlay(None)
         pass
 
     @override
