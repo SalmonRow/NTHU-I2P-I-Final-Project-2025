@@ -2,6 +2,7 @@
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="66" height="39" tilewidth="16" tileheight="16" infinite="0" nextlayerid="22" nextobjectid="3">
  <tileset firstgid="1" source="tileset.tsx"/>
  <tileset firstgid="1301" source="meme_1.tsx"/>
+ <tileset firstgid="3493" source="last_min_1.tsx"/>
  <layer id="1" name="Floor" width="66" height="39">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,130,130,1,130,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,109,

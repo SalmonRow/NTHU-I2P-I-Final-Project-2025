@@ -528,161 +528,135 @@
       "sellers": []
     }
   ],
-  "current_map": "snow.tmx",
+  "current_map": "gym.tmx",
   "player": {
-    "x": 28.406130090991688,
-    "y": 6.0
+    "x": 11.98638365595194,
+    "y": 7.998217319556524
   },
   "bag": {
     "monsters": [
       {
-        "name": "Dragonite",
-        "level": 71,
-        "hp": 194,
-        "moves": [
-          "Dragon Claw",
-          "Outrage"
-        ],
-        "xp": 5799
-      },
-      {
         "name": "Charmeleon",
-        "level": 17,
-        "hp": 46,
+        "level": 21,
+        "hp": 0,
         "moves": [
           "Ember",
           "Flamethrower"
         ],
-        "xp": 490
+        "xp": 1460
       },
       {
         "name": "Venusaur",
-        "level": 32,
-        "hp": 93,
+        "level": 33,
+        "hp": 0,
         "moves": [
           "Vine Whip",
           "Razor Leaf"
         ],
-        "xp": 3778
+        "xp": 2118
       },
       {
         "name": "Gengar",
-        "level": 28,
-        "hp": 71,
+        "level": 29,
+        "hp": 0,
         "moves": [
           "Lick",
           "Shadow Ball"
         ],
-        "xp": 5378
+        "xp": 6118
       },
       {
         "name": "Frogadier",
-        "level": 18,
-        "hp": 47,
+        "level": 20,
+        "hp": 14,
         "moves": [
           "Lick",
           "Shadow Ball"
         ],
-        "xp": 560
-      },
-      {
-        "name": "Ivysaur",
-        "level": 16,
-        "hp": 45,
-        "moves": [
-          "Thunder Shock",
-          "Quick Attack"
-        ],
-        "xp": 2200
+        "xp": 2290
       },
       {
         "name": "Gengar",
-        "level": 32,
-        "hp": 80,
-        "moves": [
-          "Lick",
-          "Shadow Ball"
-        ],
-        "xp": 1440
-      },
-      {
-        "name": "Gengar",
-        "level": 68,
-        "hp": 159,
+        "level": 75,
+        "hp": 92,
         "moves": [
           "Tackle"
-        ]
+        ],
+        "xp": 8326
       },
       {
-        "name": "Gengar",
-        "level": 30,
-        "hp": 76,
+        "name": "Dragonite",
+        "level": 70,
+        "hp": 207,
         "moves": [
-          "Lick",
-          "Shadow Ball"
+          "Tackle"
         ]
       }
     ],
     "items": [
       {
         "name": "Pokeball",
-        "count": 100
+        "count": 96
       },
       {
         "name": "Coins",
-        "count": 100
+        "count": 4950
       },
       {
         "name": "Souls",
-        "count": 100
+        "count": 70
       },
       {
         "name": "Defense Potion",
-        "count": 100
+        "count": 99
       },
       {
         "name": "Heal Potion",
-        "count": 100
+        "count": 98
       },
       {
         "name": "Power Beer",
-        "count": 100
+        "count": 99
       },
       {
         "name": "Sweet Stone",
-        "count": 100
+        "count": 96
       }
     ],
     "coins": 0
   },
   "last_visited_position": {
     "map.tmx": {
-      "x": 16.078125,
+      "x": 16.375,
       "y": 1.90625
     },
     "shop.tmx": {
-      "x": 7.5,
-      "y": 13.078125
+      "x": 6.203125,
+      "y": 13.046875
     },
     "gym.tmx": {
-      "x": 11.171875,
-      "y": 13.03125
+      "x": 11.078125,
+      "y": 13.09375
     },
     "stairs_snow.tmx": {
-      "x": 10.9375,
+      "x": 11.5625,
       "y": 1.953125
     },
     "snow.tmx": {
-      "x": 35.578125,
-      "y": 22.140625
+      "x": 4.96875,
+      "y": 16.0
     },
     "grass_gym.tmx": {
-      "x": 8.640625,
-      "y": 11.140625
+      "x": 8.578125,
+      "y": 11.03125
     },
     "beach.tmx": {
-      "x": 14.0625,
-      "y": 1.0
+      "x": 18.984375,
+      "y": 1.171875
+    },
+    "water_gym.tmx": {
+      "x": 8.09375,
+      "y": 9.15625
     }
   }
 }

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.11.2" name="meme_1" tilewidth="16" tileheight="16" tilecount="2192" columns="16">
- <image source="../../../random_free_asset download/ICONS/Free - Raven Fantasy Icons/Full Spritesheet/16x16.png" width="256" height="2192"/>
+ <image source="../images/tileset/16x16.png" width="256" height="2192"/>
 </tileset>

@@ -208,7 +208,7 @@ class GameScene(Scene):
     @override
     def enter(self) -> None:
         Logger.info(f'Entering Game...')
-        sound_manager.play_bgm("imported\Ambient Music.wav")
+        sound_manager.play_bgm("imported/Ambient Music.wav")
 
         battle_result = self.game_manager.get_and_clear_battle_result() 
         
